@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>People Analytics — HR Dashboard</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0f172a;color:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif;min-height:100vh}
+::-webkit-scrollbar{width:6px;background:#1e293b}
+::-webkit-scrollbar-thumb{background:#334155;border-radius:3px}
+#app{padding:20px;max-width:1400px;margin:0 auto}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;border-bottom:1px solid #1e293b;padding-bottom:16px;flex-wrap:wrap}
+.logo{background:linear-gradient(135deg,#1a56db,#7c3aed);border-radius:8px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;margin-top:2px}
+.topbar h1{font-size:19px;font-weight:800;letter-spacing:-0.02em;line-height:1.2}
+.topbar h1 span{font-weight:400;color:#94a3b8;font-size:12px;margin-left:6px}
+.org-info{margin-top:6px;display:flex;flex-wrap:wrap;gap:14px}
+.org-chip{font-size:11px;color:#64748b;display:flex;align-items:center;gap:4px}
+.org-chip b{color:#94a3b8;font-weight:600}
+
+/* ORG CONTEXT BOX */
+.org-context{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:14px 18px;margin-bottom:16px;font-size:12px;color:#94a3b8;line-height:1.7}
+.org-context strong{color:#f1f5f9}
+.org-context .ctx-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:6px 24px;margin-top:6px}
+.org-context .ctx-row{display:flex;gap:6px}
+.org-context .ctx-lbl{color:#475569;min-width:150px;flex-shrink:0}
+
+/* SCENARIO TABS */
+.scenario-bar{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:center}
+.scenario-bar .sc-label{font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.06em;margin-right:2px}
+.sc-btn{padding:8px 18px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;border:2px solid #334155;background:transparent;color:#64748b;transition:all .18s}
+.sc-btn:hover{border-color:#64748b;color:#f1f5f9}
+.sc-btn.active{background:#1e293b;color:#f1f5f9}
+
+/* CONTROLS */
+.controls{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.controls label{font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.06em}
+.year-btn{padding:4px 11px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;border:1px solid #334155;background:transparent;color:#64748b;transition:all .12s}
+.year-btn.on{border-color:#3b82f6;background:#3b82f618;color:#3b82f6}
+
+/* KPI ROW */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:16px}
+.kpi{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:12px 14px;cursor:pointer;transition:border-color .15s}
+.kpi:hover{border-color:#3b82f6}
+.kpi.active-kpi{border-color:#3b82f6;background:#1e3a5f}
+.kpi-lbl{font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:4px}
+.kpi-val{font-size:24px;font-weight:800;line-height:1;font-family:monospace}
+.kpi-val span{font-size:12px;font-weight:400;color:#64748b}
+.kpi-delta{font-size:10px;font-weight:600;margin-top:3px}
+
+/* DETAIL CHART (KPI click) */
+.kpi-detail{background:#162032;border:1px solid #1e3a5f;border-radius:10px;padding:14px 16px;margin-bottom:16px;display:none}
+.kpi-detail.open{display:block}
+.kpi-detail h4{font-size:13px;font-weight:700;color:#93c5fd;margin-bottom:10px}
+
+/* DASHBOARD GRID */
+.dashboard-grid{display:grid;gap:12px;grid-template-columns:repeat(3,1fr)}
+.chart-card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:14px 16px}
+.chart-card.wide{grid-column:span 2}
+.chart-card.full{grid-column:span 3}
+.chart-card h3{font-size:12px;font-weight:700;color:#f1f5f9;margin-bottom:2px}
+.chart-card .sub{font-size:10px;color:#475569;margin-bottom:8px}
+
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.leg-item{display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b}
+.leg-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+
+svg.chart{width:100%;overflow:visible;display:block}
+.ax{font-size:9px;fill:#475569;font-family:'Segoe UI',Arial,sans-serif}
+.gl{stroke:#1e3a5f;stroke-width:1}
+
+/* INTRO SCREEN */
+#intro{padding:0}
+.intro-hero{text-align:center;padding:48px 20px 32px;border-bottom:1px solid #1e293b}
+.intro-hero .pill{display:inline-block;background:#1e3a5f;color:#60a5fa;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 12px;border-radius:20px;margin-bottom:18px}
+.intro-hero h2{font-size:28px;font-weight:800;letter-spacing:-0.02em;margin-bottom:10px;line-height:1.2}
+.intro-hero h2 span{color:#3b82f6}
+.intro-hero p{font-size:14px;color:#64748b;max-width:580px;margin:0 auto;line-height:1.7}
+.intro-body{max-width:960px;margin:0 auto;padding:32px 20px 48px;display:flex;flex-direction:column;gap:28px}
+.intro-section h3{font-size:14px;font-weight:700;color:#f1f5f9;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.intro-section h3 .sec-icon{font-size:18px}
+.steps{display:flex;flex-direction:column;gap:10px}
+.step{display:flex;gap:14px;align-items:flex-start}
+.step-num{width:26px;height:26px;border-radius:50%;background:#1e3a5f;border:1px solid #3b82f6;color:#60a5fa;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.step-body{font-size:13px;color:#94a3b8;line-height:1.6}
+.step-body strong{color:#f1f5f9}
+.tip-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.tip-card{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:14px 16px;font-size:12px;color:#94a3b8;line-height:1.6}
+.tip-card .tip-icon{font-size:20px;margin-bottom:6px}
+.tip-card strong{color:#f1f5f9;display:block;margin-bottom:4px}
+.scenario-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.sc-intro-card{background:#1e293b;border:2px solid #334155;border-radius:12px;padding:20px;cursor:pointer;transition:all .18s;position:relative;overflow:hidden}
+.sc-intro-card:hover{transform:translateY(-3px)}
+.sc-intro-card .sc-glow{position:absolute;top:0;right:0;width:100px;height:100px;border-radius:0 12px 0 0}
+.sc-intro-card .sc-ic{font-size:28px;margin-bottom:10px}
+.sc-intro-card .sc-tag{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 8px;border-radius:4px;display:inline-block;margin-bottom:8px}
+.sc-intro-card h4{font-size:16px;font-weight:800;margin-bottom:4px}
+.sc-intro-card .sc-sub{font-size:12px;color:#64748b;margin-bottom:10px;font-weight:500}
+.sc-intro-card .sc-desc{font-size:12px;color:#64748b;line-height:1.6;margin-bottom:14px}
+.sc-intro-card .sc-opdracht{background:#0f172a;border-radius:8px;padding:10px 12px;font-size:12px;color:#94a3b8;line-height:1.6;margin-bottom:14px;border-left:3px solid}
+.sc-intro-card .sc-opdracht strong{color:#f1f5f9;display:block;margin-bottom:3px}
+.sc-intro-card .sc-cta{font-size:12px;font-weight:700;display:flex;align-items:center;gap:5px}
+.intro-footer{text-align:center;padding:0 20px 40px;font-size:12px;color:#334155}
+.back-intro{background:transparent;border:1px solid #334155;border-radius:6px;padding:5px 12px;color:#64748b;cursor:pointer;font-size:12px;font-weight:600;margin-left:auto}
+.back-intro:hover{border-color:#64748b;color:#f1f5f9}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:#00000090;z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#1e293b;border:1px solid #334155;border-radius:14px;padding:24px;max-width:700px;width:90%;max-height:85vh;overflow-y:auto}
+.modal h3{font-size:15px;font-weight:700;margin-bottom:4px}
+.modal .msub{font-size:11px;color:#475569;margin-bottom:14px}
+.modal-close{float:right;background:transparent;border:none;color:#64748b;font-size:18px;cursor:pointer;margin-top:-2px}
+.modal-close:hover{color:#f1f5f9}
+
+@media(max-width:900px){
+  .dashboard-grid{grid-template-columns:repeat(2,1fr)}
+  .chart-card.wide,.chart-card.full{grid-column:span 2}
+}
+@media(max-width:560px){
+  .dashboard-grid{grid-template-columns:1fr}
+  .chart-card.wide,.chart-card.full{grid-column:span 1}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ══════════════════════════════════════════════════════
+       INTRO SCREEN
+  ══════════════════════════════════════════════════════ -->
+  <div id="intro">
+
+    <!-- Hero -->
+    <div class="intro-hero">
+      <div class="pill">🎓 Masterclass People Analytics</div>
+      <h2>Ontdek het <span>verhaal achter de data</span></h2>
+      <p>Je werkt als HR-analist bij Meridian BV. Het management heeft je gevraagd een HR-vraagstuk te onderzoeken. Jouw taak: analyseer de data, ontdek verbanden en presenteer je bevindingen.</p>
+    </div>
+
+    <div class="intro-body">
+
+      <!-- HOE WERKT HET -->
+      <div class="intro-section">
+        <h3><span class="sec-icon">🗺️</span> Hoe werkt deze tool?</h3>
+        <div class="steps">
+          <div class="step"><div class="step-num">1</div><div class="step-body"><strong>Kies een scenario</strong> — Kies hieronder het HR-vraagstuk dat jou is toegewezen: ziekteverzuim, verloop of werving.</div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-body"><strong>Lees de organisatiecontext</strong> — Bovenaan het dashboard vind je achtergrondinformatie over Meridian BV en het scenario. Lees die goed door voordat je naar de data kijkt.</div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-body"><strong>Verken het dashboard</strong> — Je ziet KPI-tegels en grafieken. Klik op een KPI-tegel om de trendgrafiek te openen. Gebruik de jaarfilter om in te zoomen op specifieke periodes.</div></div>
+          <div class="step"><div class="step-num">4</div><div class="step-body"><strong>Zoek verbanden</strong> — Niet alle variabelen zijn relevant. Sommige bewegen mee, andere niet. Jij bepaalt welke data betekenisvol is en welke afleidt.</div></div>
+          <div class="step"><div class="step-num">5</div><div class="step-body"><strong>Bouw je verhaal</strong> — Gebruik de opdracht als leidraad. Formuleer een onderbouwde conclusie: wat speelt er, wat verklaart het, en wat zou je aanbevelen?</div></div>
+        </div>
+      </div>
+
+      <!-- TIPS -->
+      <div class="intro-section">
+        <h3><span class="sec-icon">💡</span> Tips voor een goede analyse</h3>
+        <div class="tip-grid">
+          <div class="tip-card"><div class="tip-icon">📈</div><strong>Kijk naar trends, niet naar losse punten</strong>Eén piek zegt weinig. Een consistent patroon over meerdere maanden zegt veel.</div>
+          <div class="tip-card"><div class="tip-icon">🔗</div><strong>Correlatie ≠ causaliteit</strong>Twee variabelen die tegelijk bewegen, hoeven niet oorzaak en gevolg te zijn. Stel jezelf altijd de vraag: wat verklaart wat?</div>
+          <div class="tip-card"><div class="tip-icon">📅</div><strong>Gebruik de jaarfilter</strong>Zoom in op specifieke jaren om te zien wanneer een trend precies start of keert. Timing is een aanwijzing.</div>
+          <div class="tip-card"><div class="tip-icon">🔍</div><strong>Vergelijk grafieken naast elkaar</strong>De 'vergelijkingskaarten' onderin het dashboard tonen twee trends naast elkaar — gebruik die bewust.</div>
+          <div class="tip-card"><div class="tip-icon">💶</div><strong>Vertaal naar impact</strong>De kostengrafiek laat zien wat het probleem financieel betekent. Gebruik die om urgentie aan te tonen.</div>
+          <div class="tip-card"><div class="tip-icon">❓</div><strong>Niet alles heeft een verband</strong>Er staan bewust variabelen in het dashboard die géén verklaring bieden. Welke zijn dat? En hoe weet je dat?</div>
+        </div>
+      </div>
+
+      <!-- SCENARIO KEUZE -->
+      <div class="intro-section">
+        <h3><span class="sec-icon">📋</span> Kies je scenario en opdracht</h3>
+        <div class="scenario-cards" id="intro-scenario-cards"></div>
+      </div>
+
+    </div>
+
+    <div class="intro-footer">Data zijn gefingeerd en uitsluitend bedoeld voor leerdoeleinden · Meridian BV is een fictieve organisatie</div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       DASHBOARD
+  ══════════════════════════════════════════════════════ -->
+  <div id="dashboard-wrap" style="display:none">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="logo">📊</div>
+    <div>
+      <h1>HR Analytics Dashboard <span>Masterclass · Meridian BV</span></h1>
+      <div class="org-info">
+        <div class="org-chip">👥 <b>500</b> medewerkers</div>
+        <div class="org-chip">📅 <b>jan 2020 – dec 2024</b></div>
+        <div class="org-chip">🏭 <b>5 afdelingen</b> · Sales, Ops, IT, HR, Finance</div>
+        <div class="org-chip">📍 <b>3 locaties</b> · Utrecht, Amsterdam, Eindhoven</div>
+      </div>
+    </div>
+    <button class="back-intro" id="btn-back-intro">← Terug naar opdracht</button>
+  </div>
+
+  <!-- ORG CONTEXT -->
+  <div class="org-context" id="org-context" style="display:none">
+    <strong id="ctx-title"></strong>
+    <div class="ctx-grid" id="ctx-grid"></div>
+  </div>
+
+  <!-- SCENARIO TABS -->
+  <div class="scenario-bar">
+    <span class="sc-label">Scenario:</span>
+    <button class="sc-btn" data-sc="absence">🏥 Ziekteverzuim</button>
+    <button class="sc-btn" data-sc="turnover">🔄 Verloop</button>
+    <button class="sc-btn" data-sc="recruit">🎯 Werving</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dash" style="display:none">
+    <div class="controls">
+      <label>Jaar:</label>
+      <div id="year-btns"></div>
+    </div>
+    <div class="kpi-row" id="kpi-row"></div>
+    <div class="kpi-detail" id="kpi-detail">
+      <h4 id="kpi-detail-title"></h4>
+      <div id="kpi-detail-chart"></div>
+    </div>
+    <div class="dashboard-grid" id="chart-grid"></div>
+  </div>
+
+  <div id="home-msg" style="padding:60px 0;text-align:center;color:#334155;font-size:14px">
+    👆 Kies een scenario hierboven om het dashboard te openen
+  </div>
+
+  </div><!-- /dashboard-wrap -->
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <button class="modal-close" id="modal-close">✕</button>
+    <h3 id="modal-title"></h3>
+    <div class="msub" id="modal-sub"></div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+// ─── SEEDED RNG ────────────────────────────────────────────────────────────
+let _s=42;
+function sr(){_s=(_s*1664525+1013904223)&0xffffffff;return((_s>>>0)/4294967296);}
+function srr(a,b){return a+(b-a)*sr();}
+
+// ─── MONTHS ───────────────────────────────────────────────────────────────
+const ML=['Jan','Feb','Mrt','Apr','Mei','Jun','Jul','Aug','Sep','Okt','Nov','Dec'];
+const MONTHS=[];
+for(let y=2020;y<=2024;y++) for(let m=0;m<12;m++)
+  MONTHS.push({key:`${y}-${m}`,label:`${ML[m]}'${String(y).slice(2)}`,year:y,month:m,idx:MONTHS.length});
+
+// ─── DATA: ABSENCE ────────────────────────────────────────────────────────
+// Volgorde grafieken: eerst afleidende variabelen, LG-verband pas later zichtbaar
+// Kortdurend verzuim: lichte stijging, maar stabiel — NIET sterk beïnvloed door LG-training
+// Langdurend verzuim: sterke stijging 2021-2023, daalt zodra LG getraind worden
+_s=42;
+const DATA_ABSENCE=MONTHS.map(({key,label,year,month,idx})=>{
+  const yme=year===2021?.5:year===2022?1.7:year===2023&&month<6?2.3:year===2023?1.0:year===2024?.25:0;
+  const sea=Math.sin(month/11*Math.PI)*-.4+(month<2||month>10?.7:0);
+
+  // Langdurend (>6 wkn): sterk gerelateerd aan ongetrainde LG
+  const lang=Math.max(.4, 1.2+yme+sea*.6+srr(-.15,.15));
+  // Kortdurend (<6 wkn): seizoenspatroon, licht, GEEN LG-effect
+  const kort=Math.max(1.8, 2.8+Math.sin(month/11*Math.PI*1.5)*.5+srr(-.2,.2));
+  const verzuim=+(lang+kort).toFixed(2);
+
+  const totLG=year<2021?8:year===2021?14:year===2022?22:year===2023&&month<6?26:year===2023?20:12;
+  const trained=year<2022?0:year===2022?Math.min(totLG,Math.floor(month*.55)):
+    year===2023&&month<6?Math.floor(totLG*.3):year===2023?Math.floor(totLG*.72):totLG;
+  const untrainedPct=totLG>0?Math.round((totLG-trained)/totLG*100):0;
+
+  // Kosten verzuim (€/maand): langdurend is duur (vervangingskosten + loondoorbetaling)
+  const kostenVerzuim=Math.round((lang*500*18 + kort*180*18) * (1+srr(-.04,.04)));
+
+  // Productiviteit (omgekeerd aan langdurend)
+  const productiviteit=Math.max(55,Math.min(96,87-lang*3.2+srr(-1.5,1.5)));
+
+  // Meldingsfrequentie (kort verzuim-gerelateerd)
+  const meldFreq=+(kort*.31+srr(-.04,.04)).toFixed(2);
+
+  // Teams
+  const tS={Sales:verzuim*1.32,Ops:verzuim*1.52,IT:verzuim*.66,HR:verzuim*.87,Finance:verzuim*.80};
+
+  // Rode haringen
+  const koffie=Math.round(375+Math.sin(month/5*Math.PI)*38+srr(-18,18));
+  const itTickets=Math.round(118+idx*.38+srr(-14,14));
+  const meldDuur=+(7.8+srr(-.9,.9)).toFixed(1); // plat — geen signaal
+
+  // Re-integratie trajecten (gerelateerd aan langdurend)
+  const reIntegratie=Math.round(Math.max(0, lang*2.8+srr(-.4,.4)));
+
+  return{key,label,year,month,idx,
+    verzuim, lang:+lang.toFixed(2), kort:+kort.toFixed(2),
+    untrainedLG:totLG-trained, totLG, untrainedPct,
+    kostenVerzuim,
+    productiviteit:+productiviteit.toFixed(1),
+    meldFreq, meldDuur, reIntegratie,
+    teamSales:+tS.Sales.toFixed(2),teamOps:+tS.Ops.toFixed(2),
+    teamIT:+tS.IT.toFixed(2),teamHR:+tS.HR.toFixed(2),teamFinance:+tS.Finance.toFixed(2),
+    koffie, itTickets
+  };
+});
+
+// ─── DATA: TURNOVER ───────────────────────────────────────────────────────
+_s=99;
+const DATA_TURNOVER=MONTHS.map(({key,label,year,month,idx})=>{
+  const reorg=year===2021&&month>=6?1.3:year===2022?3.6:year===2023&&month<6?2.9:year===2023?1.6:year===2024?.85:0;
+  const tv=Math.max(.4,1.5+reorg+srr(-.18,.18));
+  const eng=Math.max(32,year<2021?72+srr(-1.5,1.5):
+    year===2021&&month<6?70+srr(-1.5,1.5):year===2021?61-month+srr(-2,2):
+    year===2022?44+srr(-3,3):year===2023&&month<6?47+month*.55+srr(-1.5,1.5):
+    year===2023?54+month*.28+srr(-1.5,1.5):62+month*.18+srr(-.8,.8));
+  const vol=+(tv*.66+srr(-.1,.1)).toFixed(2);
+  const inv=+(tv*.34).toFixed(2);
+
+  // Kosten verloop: gemiddeld €28.000 per vertrekker (werving + onboarding + verlies)
+  const vertrSper=(500*tv/100)/12; // vertrekkers per maand
+  const kostenVerloop=Math.round(vertrSper*28000*(1+srr(-.05,.05)));
+
+  const tenureVertrek=+(Math.max(1,4.5-(70-eng)*.06+srr(-.3,.3))).toFixed(1);
+  const onboarding=+(Math.max(40,year<2021?82+srr(-2,2):year===2022?58+srr(-3,3):
+    year===2023?66+month*1.2+srr(-2,2):78+srr(-2,2))).toFixed(1);
+  const mobiliteit=+(Math.max(2,(eng-40)*.12+srr(-.5,.5))).toFixed(1);
+  const ziektVertrek=+(Math.max(1,8-(eng-40)*.08+srr(-.3,.3))).toFixed(1);
+
+  // Rode haringen
+  const kantoor=+(62+Math.sin(idx*.4)*5+srr(-4,4)).toFixed(1);
+  const parkeer=Math.round(145+srr(-20,20));
+
+  return{key,label,year,month,idx,
+    tv:+tv.toFixed(2),eng:+eng.toFixed(1),vol,inv,
+    kostenVerloop, tenureVertrek, onboarding, mobiliteit, ziektVertrek,
+    kantoor, parkeer
+  };
+});
+
+// ─── DATA: RECRUITMENT ────────────────────────────────────────────────────
+_s=777;
+const DATA_RECRUIT=MONTHS.map(({key,label,year,month,idx})=>{
+  const pld=year<2021?45:year===2021?52:year===2022?67:year===2023&&month<6?61:year===2023?48:38;
+  const days=Math.round(pld+srr(-3,3));
+  const dropout=Math.min(66,Math.max(18,20+(days-30)*.62+srr(-3,3)));
+  const fill=Math.max(38,Math.min(98,96-dropout*.52+srr(-2,2)));
+  const kwaliteit=+(Math.max(40,85-dropout*.5+srr(-3,3))).toFixed(1);
+  const reactieTijd=+(Math.max(4,8+(days-30)*.18+srr(-2,2))).toFixed(1);
+  const vacOpen=Math.round(Math.max(2,(days-25)*.28+srr(-1,1)));
+
+  // Kosten werving: €7.500 per vacature per extra maand boven benchmark
+  const extraMnd=Math.max(0,(days-30)/30);
+  const kostenWerving=Math.round((vacOpen*7500*extraMnd+vacOpen*2200)*(1+srr(-.05,.05)));
+
+  // Rode haringen
+  const linkedin=Math.round(1200+idx*12+srr(-15,15));
+  const sollPerVac=+(12+srr(-2,2)).toFixed(1);
+  const pctInbound=+(55+Math.sin(idx*.3)*8+srr(-3,3)).toFixed(1);
+
+  return{key,label,year,month,idx,
+    days, dropout:+dropout.toFixed(1), fill:+fill.toFixed(1),
+    kwaliteit, reactieTijd, vacOpen, kostenWerving,
+    linkedin, sollPerVac, pctInbound
+  };
+});
+
+// ─── ORG CONTEXT DATA ─────────────────────────────────────────────────────
+const CTX={
+  absence:{
+    title:'Meridian BV — context bij het Ziekteverzuim scenario',
+    rows:[
+      ['Organisatie','Meridian BV, 500 medewerkers, actief in zakelijke dienstverlening'],
+      ['Periode','Januari 2020 t/m december 2024 · maandelijkse meting'],
+      ['Medewerkers','5 afdelingen: Sales, Operations, IT, HR, Finance'],
+      ['Leidinggevenden','Organisatie is gegroeid; aandeel jonge leidinggevenden (<3 jr. ervaring) is gestegen'],
+      ['Beleid','Er is een verzuimprotocol, maar deelname aan leiderschapstraining is niet verplicht'],
+      ['Benchmark','Landelijk gemiddeld verzuim (CBS): 4,0% · langdurend: 1,2%'],
+      ['Kosten','Doorbetalingsverplichting 2 jaar · gemiddeld €450/dag voor langdurend verzuim'],
+    ]
+  },
+  turnover:{
+    title:'Meridian BV — context bij het Verloop scenario',
+    rows:[
+      ['Organisatie','Meridian BV, 500 medewerkers, actief in zakelijke dienstverlening'],
+      ['Periode','Januari 2020 t/m december 2024 · maandelijkse meting'],
+      ['Organisatieverandering','In deze periode heeft een significante interne verandering plaatsgevonden'],
+      ['Medewerkerstevredenheid','Wordt gemeten via jaarlijkse en pulse-enquêtes (betrokkenheidsscore 0–100)'],
+      ['Benchmark','Gemiddeld vrijwillig verloop NL zakelijke dienstverlening: ~2,0% per maand'],
+      ['Kosten','Kosten per vertrekker incl. werving, onboarding en productiviteitsverlies: ca. €28.000'],
+      ['Cultuur','Interne mobiliteit en onboarding worden actief bijgehouden als HR KPI\'s'],
+    ]
+  },
+  recruit:{
+    title:'Meridian BV — context bij het Werving scenario',
+    rows:[
+      ['Organisatie','Meridian BV, 500 medewerkers, actief in zakelijke dienstverlening'],
+      ['Periode','Januari 2020 t/m december 2024 · maandelijkse meting'],
+      ['Wervingsproces','Standaard proces: intake → screening → 2 gesprekken → aanbod → contract'],
+      ['Marktstandaard','Doorlooptijd wervingsproces: maximaal 30 kalenderdagen (marktstandaard)'],
+      ['Kandidaatmarkt','Krappe arbeidsmarkt; kandidaten ontvangen gemiddeld 2,3 aanbiedingen tegelijk'],
+      ['Kosten','Kosten per openstaande vacature per extra maand: ca. €7.500 (productiviteitsverlies + werving)'],
+      ['Sourcing','Mix van inbound (LinkedIn, site) en actief sourcen via bureau en eigen recruiters'],
+    ]
+  }
+};
+
+// ─── SVG HELPERS ──────────────────────────────────────────────────────────
+function ns(tag,a,ch){
+  const el=document.createElementNS('http://www.w3.org/2000/svg',tag);
+  for(const[k,v]of Object.entries(a||{}))el.setAttribute(k,v);
+  for(const c of(ch||[]))el.appendChild(typeof c==='string'?document.createTextNode(c):c);
+  return el;
+}
+
+function lineChart(data,series,opts={}){
+  const W=opts.w||440,H=opts.h||130;
+  const ml=opts.ml||40,mr=opts.mr||10,mt=opts.mt||8,mb=opts.mb||22;
+  const pw=W-ml-mr,ph=H-mt-mb;
+  const allV=series.flatMap(s=>data.map(d=>typeof s.key==='function'?s.key(d):d[s.key]).filter(v=>v!=null&&!isNaN(v)));
+  if(!allV.length) return ns('svg',{viewBox:`0 0 ${W} ${H}`,class:'chart'});
+  const lo=opts.min!=null?opts.min:Math.min(...allV)*.93;
+  const hi=opts.max!=null?opts.max:Math.max(...allV)*1.05;
+  const xp=i=>ml+i/(Math.max(data.length-1,1))*pw;
+  const yp=v=>mt+ph-(v-lo)/(hi-lo||1)*ph;
+  const svg=ns('svg',{viewBox:`0 0 ${W} ${H}`,class:'chart'});
+  for(let i=0;i<=4;i++){
+    const v=lo+(hi-lo)*i/4,y=yp(v);
+    svg.appendChild(ns('line',{x1:ml,y1:y,x2:ml+pw,y2:y,class:'gl'}));
+    const lbl=v>=10000?'€'+Math.round(v/1000)+'k':v>=1000?Math.round(v)+'':+(v).toFixed(v<10?1:0)+'';
+    svg.appendChild(ns('text',{x:ml-3,y:y+3,class:'ax','text-anchor':'end'},[lbl]));
+  }
+  const step=Math.ceil(data.length/9);
+  data.forEach((d,i)=>{if(i%step===0)svg.appendChild(ns('text',{x:xp(i),y:H-mb+12,class:'ax','text-anchor':'middle'},[d.label]));});
+  series.forEach(s=>{
+    const col=s.color||'#3b82f6';
+    const vals=data.map(d=>typeof s.key==='function'?s.key(d):d[s.key]);
+    if(s.fill){
+      const pts=[`${xp(0)},${yp(lo)}`,...vals.map((v,i)=>`${xp(i)},${yp(v??lo)}`)].concat([`${xp(data.length-1)},${yp(lo)}`]);
+      svg.appendChild(ns('polygon',{points:pts.join(' '),fill:col,opacity:'.15'}));
+    }
+    const pts=vals.map((v,i)=>`${xp(i)},${yp(v??lo)}`).join(' ');
+    svg.appendChild(ns('polyline',{points:pts,fill:'none',stroke:col,'stroke-width':s.w||1.8,'stroke-dasharray':s.dash||''}));
+  });
+  if(opts.bench!=null){
+    const y=yp(opts.bench);
+    svg.appendChild(ns('line',{x1:ml,y1:y,x2:ml+pw,y2:y,stroke:'#475569','stroke-width':'1.2','stroke-dasharray':'5 3'}));
+  }
+  return svg;
+}
+
+function barChart(data,keys,colors,opts={}){
+  const W=opts.w||440,H=opts.h||130;
+  const ml=opts.ml||40,mr=opts.mr||8,mt=opts.mt||8,mb=opts.mb||22;
+  const pw=W-ml-mr,ph=H-mt-mb;
+  const stacked=opts.stacked||false;
+  const maxV=stacked?Math.max(...data.map(d=>keys.reduce((s,k)=>s+(d[k]||0),0)))*1.08:Math.max(...data.map(d=>Math.max(...keys.map(k=>d[k]||0))))*1.1;
+  const svg=ns('svg',{viewBox:`0 0 ${W} ${H}`,class:'chart'});
+  for(let i=0;i<=4;i++){
+    const v=maxV*i/4,y=mt+ph-ph*i/4;
+    svg.appendChild(ns('line',{x1:ml,y1:y,x2:ml+pw,y2:y,class:'gl'}));
+    const lbl=v>=10000?'€'+Math.round(v/1000)+'k':+(v).toFixed(v<10?1:0)+'';
+    svg.appendChild(ns('text',{x:ml-3,y:y+3,class:'ax','text-anchor':'end'},[lbl]));
+  }
+  const bW=Math.max(2,pw/data.length*.62/(!stacked?keys.length:1));
+  const step=Math.ceil(data.length/8);
+  data.forEach((d,i)=>{
+    const cx=ml+i/(data.length-.5)*pw;
+    if(i%step===0)svg.appendChild(ns('text',{x:cx,y:H-mb+12,class:'ax','text-anchor':'middle'},[d.label||d.year||'']));
+    if(stacked){
+      let base=0;
+      keys.forEach((k,ki)=>{const v=d[k]||0,bh=v/maxV*ph;svg.appendChild(ns('rect',{x:cx-bW/2,y:mt+ph-bh-base/maxV*ph,width:Math.max(1,bW),height:Math.max(0,bh),fill:colors[ki],rx:ki===keys.length-1?'2':'0'}));base+=v;});
+    }else{
+      const tot=bW*keys.length;
+      keys.forEach((k,ki)=>{const v=d[k]||0,bh=v/maxV*ph;svg.appendChild(ns('rect',{x:cx-tot/2+ki*bW,y:mt+ph-bh,width:Math.max(1,bW-1),height:Math.max(0,bh),fill:colors[ki],rx:'2'}));});
+    }
+  });
+  return svg;
+}
+
+function hBarChart(data,keys,colors,opts={}){
+  const rowH=34,W=opts.w||440,H=data.length*rowH+28;
+  const ml=opts.ml||86,mr=opts.mr||20,mt=8,mb=22;
+  const pw=W-ml-mr,ph=H-mt-mb;
+  const maxV=Math.max(...data.map(d=>Math.max(...keys.map(k=>d[k]||0))))*1.08;
+  const svg=ns('svg',{viewBox:`0 0 ${W} ${H}`,class:'chart'});
+  for(let i=0;i<=4;i++){
+    const x=ml+pw*i/4;
+    svg.appendChild(ns('line',{x1:x,y1:mt,x2:x,y2:mt+ph,class:'gl'}));
+    svg.appendChild(ns('text',{x,y:H-mb+12,class:'ax','text-anchor':'middle'},[Math.round(maxV*i/4)+'']));
+  }
+  data.forEach((d,i)=>{
+    svg.appendChild(ns('text',{x:ml-5,y:mt+i*rowH+rowH/2+4,class:'ax','text-anchor':'end'},[d.label||d.stage||'']));
+    const bH=Math.min(13,(rowH-4)/keys.length);
+    keys.forEach((k,ki)=>{
+      const v=d[k]||0,bw=v/maxV*pw;
+      const y=mt+i*rowH+(rowH-keys.length*(bH+2))/2+ki*(bH+2);
+      svg.appendChild(ns('rect',{x:ml,y,width:Math.max(0,bw),height:bH,fill:colors[ki],rx:'2'}));
+    });
+  });
+  return svg;
+}
+
+// ─── DOM HELPERS ──────────────────────────────────────────────────────────
+function mkKpi(lbl,val,unit,delta,color,key,src){
+  const el=document.createElement('div');el.className='kpi';
+  const l=document.createElement('div');l.className='kpi-lbl';l.textContent=lbl;el.appendChild(l);
+  const v=document.createElement('div');v.className='kpi-val';v.style.color=color||'#3b82f6';
+  v.textContent=val;
+  if(unit){const s=document.createElement('span');s.textContent=' '+unit;v.appendChild(s);}
+  el.appendChild(v);
+  if(delta!==undefined&&delta!==null){
+    const d=document.createElement('div');d.className='kpi-delta';
+    const pos=delta>0;
+    d.textContent=(pos?'▲ +':'▼ ')+Math.abs(delta).toFixed(Math.abs(delta)<10?1:0)+' '+unit;
+    d.style.color=pos?'#10b981':'#ef4444';
+    el.appendChild(d);
+  }
+  // click → detail chart
+  if(key&&src){
+    el.addEventListener('click',()=>showKpiDetail(el,lbl,unit,key,color,src));
+  }
+  return el;
+}
+
+function showKpiDetail(el,lbl,unit,key,color,src){
+  const detail=document.getElementById('kpi-detail');
+  const prev=document.querySelector('.kpi.active-kpi');
+  if(prev&&prev!==el){prev.classList.remove('active-kpi');}
+  if(el.classList.contains('active-kpi')){el.classList.remove('active-kpi');detail.classList.remove('open');return;}
+  el.classList.add('active-kpi');
+  document.getElementById('kpi-detail-title').textContent=lbl+(unit?' ('+unit+')':'');
+  const dc=document.getElementById('kpi-detail-chart');
+  dc.innerHTML='';
+  const years=state.years;
+  const data=src.filter(d=>years.includes(d.year));
+  const svg=lineChart(data,[{key,color:color||'#3b82f6',fill:true,w:2}],{w:800,h:160});
+  dc.appendChild(svg);
+  const leg=document.createElement('div');leg.className='legend';
+  const dot=document.createElement('div');dot.className='leg-dot';dot.style.background=color||'#3b82f6';
+  const li=document.createElement('div');li.className='leg-item';li.appendChild(dot);li.appendChild(document.createTextNode(lbl));
+  leg.appendChild(li);dc.appendChild(leg);
+  detail.classList.add('open');
+  detail.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function mkCard(title,sub,content,cls){
+  const el=document.createElement('div');
+  el.className='chart-card'+(cls?' '+cls:'');
+  const h=document.createElement('h3');h.textContent=title;el.appendChild(h);
+  if(sub){const s=document.createElement('div');s.className='sub';s.textContent=sub;el.appendChild(s);}
+  if(content) el.appendChild(content);
+  return el;
+}
+
+function mkLegend(items){
+  const el=document.createElement('div');el.className='legend';
+  items.forEach(({c,l})=>{
+    const d=document.createElement('div');d.className='leg-dot';d.style.background=c;
+    const w=document.createElement('div');w.className='leg-item';w.appendChild(d);w.appendChild(document.createTextNode(l));
+    el.appendChild(w);
+  });
+  return el;
+}
+
+function wrap(svg,legend){
+  const d=document.createElement('div');d.appendChild(svg);
+  if(legend)d.appendChild(legend);
+  return d;
+}
+
+function addCard(grid,title,sub,svg,legend,cls){
+  const c=mkCard(title,sub,null,cls);
+  c.appendChild(wrap(svg,legend));
+  grid.appendChild(c);
+}
+
+// ─── MODAL ────────────────────────────────────────────────────────────────
+function openModal(title,sub,svgOrEl){
+  document.getElementById('modal-title').textContent=title;
+  document.getElementById('modal-sub').textContent=sub||'';
+  const body=document.getElementById('modal-body');body.innerHTML='';
+  body.appendChild(svgOrEl);
+  document.getElementById('modal').classList.add('open');
+}
+document.getElementById('modal-close').onclick=()=>document.getElementById('modal').classList.remove('open');
+document.getElementById('modal').addEventListener('click',e=>{if(e.target===document.getElementById('modal'))document.getElementById('modal').classList.remove('open');});
+
+// ─── SCENARIO RENDERS ─────────────────────────────────────────────────────
+
+function renderAbsence(data){
+  const grid=document.getElementById('chart-grid');
+  const krow=document.getElementById('kpi-row');
+  const latest=data[data.length-1]||{};
+  const prev=data[data.length-13]||{};
+
+  // KPIs — kosten EERST, daarna de rest, ongetrainde LG bewust achteraan
+  krow.appendChild(mkKpi('Kosten verzuim','€'+(latest.kostenVerzuim||0).toLocaleString('nl'),'€/mnd',null,'#ef4444','kostenVerzuim',DATA_ABSENCE));
+  krow.appendChild(mkKpi('Verzuim totaal',(latest.verzuim||0).toFixed(2),'%',(latest.verzuim||0)-(prev.verzuim||0),'#3b82f6','verzuim',DATA_ABSENCE));
+  krow.appendChild(mkKpi('Kortdurend <6wk',(latest.kort||0).toFixed(2),'%',(latest.kort||0)-(prev.kort||0),'#60a5fa','kort',DATA_ABSENCE));
+  krow.appendChild(mkKpi('Langdurend >6wk',(latest.lang||0).toFixed(2),'%',(latest.lang||0)-(prev.lang||0),'#f97316','lang',DATA_ABSENCE));
+  krow.appendChild(mkKpi('Re-integraties',latest.reIntegratie||0,'',null,'#a855f7','reIntegratie',DATA_ABSENCE));
+  krow.appendChild(mkKpi('Productiviteit',(latest.productiviteit||0).toFixed(1),'%',null,'#10b981','productiviteit',DATA_ABSENCE));
+  krow.appendChild(mkKpi('Koffie (L)',latest.koffie||0,'L',null,'#78350f','koffie',DATA_ABSENCE));
+  krow.appendChild(mkKpi('IT-tickets',latest.itTickets||0,'',null,'#475569','itTickets',DATA_ABSENCE));
+  krow.appendChild(mkKpi('Meldingsduur',+(latest.meldDuur||0).toFixed(1),'dgn',null,'#475569','meldDuur',DATA_ABSENCE));
+  krow.appendChild(mkKpi('% Ongetr. LG',(latest.untrainedPct||0)+'','%',null,'#f59e0b','untrainedPct',DATA_ABSENCE));
+
+  // 1. Kosten verzuim (euro, prominent)
+  addCard(grid,'Kosten ziekteverzuim per maand','Totale kosten incl. loondoorbetaling en vervanging (€)',
+    lineChart(data,[{key:'kostenVerzuim',color:'#ef4444',fill:true,w:2}],{}),
+    mkLegend([{c:'#ef4444',l:'Kosten (€/maand)'}]));
+
+  // 2. Kortdurend verzuim
+  addCard(grid,'Kortdurend verzuim (<6 weken)','Percentage medewerkers, per maand',
+    lineChart(data,[{key:'kort',color:'#60a5fa',fill:true,w:2}],{min:1,max:5}),
+    mkLegend([{c:'#60a5fa',l:'Kortdurend %'}]));
+
+  // 3. Productiviteitsscore
+  addCard(grid,'Productiviteitsscore (team)','Gemiddeld per maand, schaal 0–100',
+    lineChart(data,[{key:'productiviteit',color:'#10b981',fill:true,w:2}],{min:50,max:100}),
+    mkLegend([{c:'#10b981',l:'Productiviteit %'}]));
+
+  // 4. Re-integratietrajecten
+  addCard(grid,'Actieve re-integratietrajecten','Aantal lopende trajecten per maand',
+    lineChart(data,[{key:'reIntegratie',color:'#a855f7',fill:true,w:2}],{min:0}),
+    mkLegend([{c:'#a855f7',l:'Re-integraties'}]));
+
+  // 5. Langdurend verzuim
+  addCard(grid,'Langdurend verzuim (>6 weken)','Percentage medewerkers, per maand',
+    lineChart(data,[{key:'lang',color:'#f97316',fill:true,w:2}],{min:0,max:5}),
+    mkLegend([{c:'#f97316',l:'Langdurend %'}]));
+
+  // 6. Meldingsfrequentie
+  addCard(grid,'Meldingsfrequentie per medewerker','Gemiddeld aantal meldingen per medewerker per maand',
+    lineChart(data,[{key:'meldFreq',color:'#818cf8',fill:true,w:2}],{min:0}),
+    mkLegend([{c:'#818cf8',l:'Meldingsfrequentie'}]));
+
+  // 7. FULL: kortdurend vs langdurend naast elkaar
+  const cf=mkCard('Kortdurend vs langdurend verzuim vergeleken','Twee typen naast elkaar op tijdlijn','','full');
+  const ov=document.createElement('div');ov.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:12px';
+  ov.appendChild(lineChart(data,[{key:'kort',color:'#60a5fa',fill:true,w:2}],{h:120,min:1,max:5}));
+  ov.appendChild(lineChart(data,[{key:'lang',color:'#f97316',fill:true,w:2}],{h:120,min:0,max:5}));
+  cf.appendChild(ov);
+  cf.appendChild(mkLegend([{c:'#60a5fa',l:'Kortdurend %'},{c:'#f97316',l:'Langdurend %'}]));
+  grid.appendChild(cf);
+
+  // 8. Verzuim per team (jaargemiddelde)
+  const teamYear=[2020,2021,2022,2023,2024].map(y=>{
+    const yd=DATA_ABSENCE.filter(d=>d.year===y);
+    const avg=k=>+(yd.reduce((s,d)=>s+d[k],0)/yd.length).toFixed(2);
+    return{year:String(y),Sales:avg('teamSales'),Ops:avg('teamOps'),IT:avg('teamIT'),HR:avg('teamHR'),Finance:avg('teamFinance')};
+  });
+  const twcard=mkCard('Verzuim per afdeling (jaargemiddelde)','Per team, 2020–2024','','wide');
+  twcard.appendChild(wrap(
+    barChart(teamYear,['Sales','Ops','IT','HR','Finance'],['#3b82f6','#f97316','#10b981','#a855f7','#f59e0b'],{h:150}),
+    mkLegend([{c:'#3b82f6',l:'Sales'},{c:'#f97316',l:'Ops'},{c:'#10b981',l:'IT'},{c:'#a855f7',l:'HR'},{c:'#f59e0b',l:'Finance'}])
+  ));
+  grid.appendChild(twcard);
+
+  // 9. Gemiddelde meldingsduur (rode haring — plat)
+  addCard(grid,'Gem. duur per melding (dgn)','Kalenderaantal per verzuimmelding',
+    lineChart(data,[{key:'meldDuur',color:'#334155',fill:false,w:1.4,dash:'5 3'}],{min:5,max:12}),
+    mkLegend([{c:'#334155',l:'Meldingsduur (dgn)'}]));
+
+  // 10. Koffie (rode haring)
+  addCard(grid,'Koffieverbruik kantoor (liter)','Maandverbruik over alle locaties',
+    lineChart(data,[{key:'koffie',color:'#78350f',fill:true,w:1.4}],{}),
+    mkLegend([{c:'#78350f',l:'Koffie (L/mnd)'}]));
+
+  // 11. IT-tickets (rode haring)
+  addCard(grid,'IT-supporttickets','Aantal ingediende tickets per maand',
+    lineChart(data,[{key:'itTickets',color:'#334155',fill:false,w:1.4,dash:'5 3'}],{}),
+    mkLegend([{c:'#334155',l:'IT-tickets'}]));
+
+  // 12. % ongetrainde LG — bewust als LAATSTE kaart
+  addCard(grid,'% Ongetrainde leidinggevenden','Aandeel LG zonder afgeronde training',
+    lineChart(data,[{key:'untrainedPct',color:'#f59e0b',fill:true,w:2}],{min:0,max:100}),
+    mkLegend([{c:'#f59e0b',l:'% ongetrainde LG'}]));
+}
+
+function renderTurnover(data){
+  const grid=document.getElementById('chart-grid');
+  const krow=document.getElementById('kpi-row');
+  const latest=data[data.length-1]||{};
+  const prev=data[data.length-13]||{};
+
+  krow.appendChild(mkKpi('Kosten verloop','€'+(latest.kostenVerloop||0).toLocaleString('nl'),'€/mnd',null,'#ef4444','kostenVerloop',DATA_TURNOVER));
+  krow.appendChild(mkKpi('Verloop %',(latest.tv||0).toFixed(2),'%',(latest.tv||0)-(prev.tv||0),'#f97316','tv',DATA_TURNOVER));
+  krow.appendChild(mkKpi('Vrijwillig %',(latest.vol||0).toFixed(2),'%',(latest.vol||0)-(prev.vol||0),'#ef4444','vol',DATA_TURNOVER));
+  krow.appendChild(mkKpi('Betrokkenheid',(latest.eng||0).toFixed(1),'%',(latest.eng||0)-(prev.eng||0),'#3b82f6','eng',DATA_TURNOVER));
+  krow.appendChild(mkKpi('Onboarding',(latest.onboarding||0).toFixed(1),'%',null,'#10b981','onboarding',DATA_TURNOVER));
+  krow.appendChild(mkKpi('Int. mobiliteit',(latest.mobiliteit||0).toFixed(1),'%',null,'#a855f7','mobiliteit',DATA_TURNOVER));
+  krow.appendChild(mkKpi('Tenure vertrek',(latest.tenureVertrek||0).toFixed(1),'jr',null,'#f59e0b','tenureVertrek',DATA_TURNOVER));
+  krow.appendChild(mkKpi('Kantoorbez.',(latest.kantoor||0).toFixed(1),'%',null,'#475569','kantoor',DATA_TURNOVER));
+  krow.appendChild(mkKpi('Parkeerplekken',latest.parkeer||0,'',null,'#475569','parkeer',DATA_TURNOVER));
+
+  // 1. Kosten verloop
+  addCard(grid,'Kosten medewerkerverloop per maand','Incl. werving, onboarding en productiviteitsverlies (€)',
+    lineChart(data,[{key:'kostenVerloop',color:'#ef4444',fill:true,w:2}],{}),
+    mkLegend([{c:'#ef4444',l:'Kosten (€/maand)'}]));
+
+  // 2. Verloop totaal
+  addCard(grid,'Verloop % (totaal)','Vrijwillig + gedwongen vertrek per maand',
+    lineChart(data,[{key:'tv',color:'#f97316',fill:true,w:2},{key:'vol',color:'#ef4444',fill:false,w:1.4,dash:'3 2'}],{bench:2}),
+    mkLegend([{c:'#f97316',l:'Totaal verloop %'},{c:'#ef4444',l:'— — Vrijwillig %'},{c:'#475569',l:'— — benchmark 2%'}]));
+
+  // 3. Onboarding tevredenheid
+  addCard(grid,'Onboarding tevredenheid','Score nieuwe medewerkers, schaal 0–100',
+    lineChart(data,[{key:'onboarding',color:'#10b981',fill:true,w:2}],{min:35,max:95}),
+    mkLegend([{c:'#10b981',l:'Onboarding score'}]));
+
+  // 4. Interne mobiliteit
+  addCard(grid,'Interne mobiliteit','% medewerkers dat intern doorstroomt per maand',
+    lineChart(data,[{key:'mobiliteit',color:'#a855f7',fill:true,w:2}],{min:0}),
+    mkLegend([{c:'#a855f7',l:'Interne mobiliteit %'}]));
+
+  // 5. Betrokkenheid
+  addCard(grid,'Medewerkerbetrokkenheid','Betrokkenheidsscore 0–100 (pulse + jaarlijkse meting)',
+    lineChart(data,[{key:'eng',color:'#3b82f6',fill:true,w:2}],{min:30,max:85}),
+    mkLegend([{c:'#3b82f6',l:'Betrokkenheidsscore'}]));
+
+  // 6. Tenure bij vertrek
+  addCard(grid,'Gem. dienstjaren bij vertrek','Gemiddeld aantal dienstjaren van vrijwillig vertrekkenden',
+    lineChart(data,[{key:'tenureVertrek',color:'#f59e0b',fill:true,w:2}],{min:0,max:8}),
+    mkLegend([{c:'#f59e0b',l:'Dienstjaren bij vertrek'}]));
+
+  // 7. FULL: betrokkenheid + verloop naast elkaar
+  const cf=mkCard('Betrokkenheid & verloop vergeleken','Twee trends naast elkaar op tijdlijn','','full');
+  const ov=document.createElement('div');ov.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:12px';
+  ov.appendChild(lineChart(data,[{key:'eng',color:'#3b82f6',fill:true,w:2}],{h:120,min:30,max:85}));
+  ov.appendChild(lineChart(data,[{key:'tv',color:'#f97316',fill:true,w:2}],{h:120,bench:2}));
+  cf.appendChild(ov);cf.appendChild(mkLegend([{c:'#3b82f6',l:'Betrokkenheid %'},{c:'#f97316',l:'Verloop %'}]));
+  grid.appendChild(cf);
+
+  // 8. Ziektedagen vóór vertrek
+  addCard(grid,'Ziektedagen vóór vrijwillig vertrek','Gem. ziektedagen in laatste 3 mnd voor vertrek',
+    lineChart(data,[{key:'ziektVertrek',color:'#f43f5e',fill:true,w:2}],{min:0,max:12}),
+    mkLegend([{c:'#f43f5e',l:'Ziektedagen pre-vertrek'}]));
+
+  // 9. Kantoorbezetting (rode haring)
+  addCard(grid,'Kantoorbezetting','% van beschikbare werkplekken dat bezet is',
+    lineChart(data,[{key:'kantoor',color:'#334155',fill:false,w:1.4,dash:'5 3'}],{min:40,max:85}),
+    mkLegend([{c:'#334155',l:'Kantoorbezetting %'}]));
+
+  // 10. Parkeerplekken (rode haring)
+  addCard(grid,'Bezette parkeerplekken','Gemiddeld per dag over alle locaties',
+    lineChart(data,[{key:'parkeer',color:'#334155',fill:false,w:1.4,dash:'5 3'}],{}),
+    mkLegend([{c:'#334155',l:'Parkeerplekken bezet'}]));
+}
+
+function renderRecruit(data){
+  const grid=document.getElementById('chart-grid');
+  const krow=document.getElementById('kpi-row');
+  const latest=data[data.length-1]||{};
+  const prev=data[data.length-13]||{};
+
+  krow.appendChild(mkKpi('Kosten werving','€'+(latest.kostenWerving||0).toLocaleString('nl'),'€/mnd',null,'#ef4444','kostenWerving',DATA_RECRUIT));
+  krow.appendChild(mkKpi('Doorlooptijd',latest.days||0,'dgn',(latest.days||0)-(prev.days||0),'#10b981','days',DATA_RECRUIT));
+  krow.appendChild(mkKpi('Uitval %',(latest.dropout||0).toFixed(1),'%',(latest.dropout||0)-(prev.dropout||0),'#f97316','dropout',DATA_RECRUIT));
+  krow.appendChild(mkKpi('Vulling %',(latest.fill||0).toFixed(1),'%',(latest.fill||0)-(prev.fill||0),'#3b82f6','fill',DATA_RECRUIT));
+  krow.appendChild(mkKpi('Kwaliteitsscore',(latest.kwaliteit||0).toFixed(1),'',null,'#a855f7','kwaliteit',DATA_RECRUIT));
+  krow.appendChild(mkKpi('Reactietijd (u)',(latest.reactieTijd||0).toFixed(1),'u',null,'#f59e0b','reactieTijd',DATA_RECRUIT));
+  krow.appendChild(mkKpi('Vac. openstaand',latest.vacOpen||0,'',null,'#f97316','vacOpen',DATA_RECRUIT));
+  krow.appendChild(mkKpi('LinkedIn volgers',latest.linkedin||0,'',null,'#475569','linkedin',DATA_RECRUIT));
+  krow.appendChild(mkKpi('Soll./vacature',(latest.sollPerVac||0).toFixed(1),'',null,'#475569','sollPerVac',DATA_RECRUIT));
+
+  // 1. Kosten werving
+  addCard(grid,'Kosten open vacatures per maand','Productiviteitsverlies + wervingskosten (€)',
+    lineChart(data,[{key:'kostenWerving',color:'#ef4444',fill:true,w:2}],{}),
+    mkLegend([{c:'#ef4444',l:'Kosten (€/maand)'}]));
+
+  // 2. Kandidaatuitval
+  addCard(grid,'Kandidaatuitval %','Aandeel kandidaten dat afhaakt tijdens het proces',
+    lineChart(data,[{key:'dropout',color:'#f97316',fill:true,w:2}],{min:10,max:70}),
+    mkLegend([{c:'#f97316',l:'Uitval %'}]));
+
+  // 3. Vacaturevulling
+  addCard(grid,'Vacaturevulling %','Aandeel vacatures dat succesvol ingevuld wordt',
+    lineChart(data,[{key:'fill',color:'#3b82f6',fill:true,w:2}],{min:30,max:100}),
+    mkLegend([{c:'#3b82f6',l:'Vulling %'}]));
+
+  // 4. Openstaande vacatures
+  addCard(grid,'Openstaande vacatures','Aantal vacatures dat nog niet ingevuld is',
+    lineChart(data,[{key:'vacOpen',color:'#f43f5e',fill:true,w:2}],{min:0}),
+    mkLegend([{c:'#f43f5e',l:'Openstaande vacatures'}]));
+
+  // 5. Reactietijd eerste contact
+  addCard(grid,'Reactietijd eerste contact (uren)','Uren tot eerste reactie richting kandidaat',
+    lineChart(data,[{key:'reactieTijd',color:'#f59e0b',fill:true,w:2}],{min:0}),
+    mkLegend([{c:'#f59e0b',l:'Reactietijd (u)'}]));
+
+  // 6. Kwaliteitsscore
+  addCard(grid,'Kwaliteitsscore aangeboden kandidaten','Beoordeling door hiring managers (0–100)',
+    lineChart(data,[{key:'kwaliteit',color:'#a855f7',fill:true,w:2}],{min:30,max:100}),
+    mkLegend([{c:'#a855f7',l:'Kwaliteitsscore'}]));
+
+  // 7. FULL: doorlooptijd + uitval naast elkaar
+  const cf=mkCard('Doorlooptijd & uitval vergeleken','Twee trends naast elkaar op tijdlijn','','full');
+  const ov=document.createElement('div');ov.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:12px';
+  ov.appendChild(lineChart(data,[{key:'days',color:'#10b981',fill:true,w:2}],{h:120,min:20,max:80,bench:30}));
+  ov.appendChild(lineChart(data,[{key:'dropout',color:'#f97316',fill:true,w:2}],{h:120,min:10,max:70}));
+  cf.appendChild(ov);cf.appendChild(mkLegend([{c:'#10b981',l:'Doorlooptijd (dgn)'},{c:'#f97316',l:'Uitval %'},{c:'#475569',l:'— — benchmark 30d'}]));
+  grid.appendChild(cf);
+
+  // 8. Doorlooptijd
+  addCard(grid,'Doorlooptijd wervingsproces (dgn)','Totale doorlooptijd in kalenderdagen',
+    lineChart(data,[{key:'days',color:'#10b981',fill:true,w:2}],{min:20,max:80,bench:30}),
+    mkLegend([{c:'#10b981',l:'Doorlooptijd (dgn)'},{c:'#475569',l:'— — benchmark 30d'}]));
+
+  // 9. % Inbound (licht patroon, geen signaal)
+  addCard(grid,'% Inbound sollicitaties','Aandeel spontane vs actief geworven',
+    lineChart(data,[{key:'pctInbound',color:'#334155',fill:false,w:1.4,dash:'5 3'}],{min:30,max:80}),
+    mkLegend([{c:'#334155',l:'% inbound'}]));
+
+  // 10. LinkedIn volgers (rode haring)
+  addCard(grid,'LinkedIn volgers bedrijfspagina','Totaal per maand',
+    lineChart(data,[{key:'linkedin',color:'#0077b5',fill:false,w:1.4,dash:'5 3'}],{}),
+    mkLegend([{c:'#0077b5',l:'LinkedIn volgers'}]));
+
+  // 11. Funnel 2022 vs 2024
+  const funnelD=[
+    {label:'Sollicitaties',v2022:850,v2024:780},{label:'Screening',v2022:480,v2024:460},
+    {label:'1e gesprek',v2022:220,v2024:280},{label:'2e gesprek',v2022:95,v2024:180},
+    {label:'Aanbieding',v2022:55,v2024:160},{label:'Aangenomen',v2022:38,v2024:145},
+  ];
+  const fcrd=mkCard('Wervingstrechter: 2022 vs 2024','Aantallen per fase','','wide');
+  fcrd.appendChild(wrap(hBarChart(funnelD,['v2022','v2024'],['#ef4444','#10b981'],{ml:82,mr:20}),
+    mkLegend([{c:'#ef4444',l:'2022'},{c:'#10b981',l:'2024'}])));
+  grid.appendChild(fcrd);
+}
+
+// ─── MAIN RENDER ──────────────────────────────────────────────────────────
+const state={sc:null,years:[2020,2021,2022,2023,2024]};
+
+function render(){
+  const sc=state.sc;
+  document.getElementById('kpi-row').innerHTML='';
+  document.getElementById('chart-grid').innerHTML='';
+  document.getElementById('kpi-detail').classList.remove('open');
+
+  if(!sc){
+    document.getElementById('home-msg').style.display='';
+    document.getElementById('dash').style.display='none';
+    document.getElementById('org-context').style.display='none';
+    return;
+  }
+  document.getElementById('home-msg').style.display='none';
+  document.getElementById('dash').style.display='';
+
+  // Org context
+  const ctx=CTX[sc];
+  document.getElementById('ctx-title').textContent=ctx.title;
+  const cg=document.getElementById('ctx-grid');cg.innerHTML='';
+  ctx.rows.forEach(([lbl,val])=>{
+    const row=document.createElement('div');row.className='ctx-row';
+    const l=document.createElement('span');l.className='ctx-lbl';l.textContent=lbl+':';
+    const v=document.createElement('span');v.textContent=val;
+    row.appendChild(l);row.appendChild(v);cg.appendChild(row);
+  });
+  document.getElementById('org-context').style.display='';
+
+  // Year buttons
+  const yb=document.getElementById('year-btns');yb.innerHTML='';
+  [2020,2021,2022,2023,2024].forEach(y=>{
+    const b=document.createElement('button');
+    b.className='year-btn'+(state.years.includes(y)?' on':'');
+    b.textContent=y;
+    b.onclick=()=>{state.years=state.years.includes(y)?(state.years.length>1?state.years.filter(x=>x!==y):state.years):[...state.years,y].sort((a,b)=>a-b);render();};
+    yb.appendChild(b);
+  });
+
+  const src=sc==='absence'?DATA_ABSENCE:sc==='turnover'?DATA_TURNOVER:DATA_RECRUIT;
+  const data=src.filter(d=>state.years.includes(d.year));
+
+  if(sc==='absence') renderAbsence(data);
+  else if(sc==='turnover') renderTurnover(data);
+  else renderRecruit(data);
+}
+
+document.querySelectorAll('.sc-btn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.sc-btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    state.sc=b.dataset.sc;
+    state.years=[2020,2021,2022,2023,2024];
+    render();
+  });
+});
+
+// ─── INTRO SCREEN ─────────────────────────────────────────────────────────
+const INTRO_SCENARIOS=[
+  {
+    id:'absence',icon:'🏥',color:'#3b82f6',tag:'Scenario A',
+    title:'Ziekteverzuim',sub:'Wat verklaart de stijging?',
+    desc:'Het ziekteverzuim bij Meridian BV is de afgelopen jaren opgelopen. Het management maakt zich zorgen over de kosten en de impact op teams. Ze vragen jou als HR-analist om uit te zoeken wat er speelt.',
+    opdracht:'Analyseer de verzuimdata van 2020–2024. Welke trend zie je? Welke variabelen lijken samen te hangen met het verzuim? Maak onderscheid tussen kortdurend en langdurend verzuim. Wat zou een mogelijke verklaring kunnen zijn, en welke aanbeveling zou je doen aan het management?',
+    vragen:[
+      'Wanneer begint het verzuim te stijgen?',
+      'Is er verschil tussen kortdurend en langdurend verzuim?',
+      'Welke variabelen bewegen mee — en welke niet?',
+      'Wat kost dit de organisatie?',
+    ]
+  },
+  {
+    id:'turnover',icon:'🔄',color:'#f97316',tag:'Scenario B',
+    title:'Medewerkerverloop',sub:'Waarom vertrekken mensen?',
+    desc:'Meridian BV ervaart de laatste jaren meer verloop dan gewenst. Vrijwillig vertrek stijgt, met name van medewerkers met 2–5 jaar dienstverband. HR wil begrijpen wat de oorzaak is en hoe dit gestopt kan worden.',
+    opdracht:'Analyseer de verloopdata van 2020–2024. Wanneer stijgt het verloop, en welke HR-variabelen veranderen in dezelfde periode? Welk verband zie je tussen betrokkenheid en verloop? Beschrijf wat er naar jouw mening is gebeurd in de organisatie, en wat de gevolgen waren.',
+    vragen:[
+      'Wanneer precies begint het verloop te stijgen?',
+      'Welke andere variabele verandert op hetzelfde moment?',
+      'Wat zou een organisatorische oorzaak kunnen zijn?',
+      'Wat zijn de financiële consequenties?',
+    ]
+  },
+  {
+    id:'recruit',icon:'🎯',color:'#10b981',tag:'Scenario C',
+    title:'Wervingseffectiviteit',sub:'Waarom haken kandidaten af?',
+    desc:'Meridian BV slaagt er steeds moeilijker in om vacatures tijdig in te vullen. Kandidaten haken af tijdens het proces. De kosten van openstaande vacatures lopen op. HR wil weten wat er mis gaat.',
+    opdracht:'Analyseer de wervingsdata van 2020–2024. Welke trends zie je in doorlooptijd, uitval en vacaturevulling? Welke variabelen hangen met elkaar samen? Wanneer treedt er verbetering op, en waardoor? Formuleer een hypothese over de oorzaak van de problemen én de verbetering.',
+    vragen:[
+      'Wanneer verslechtert het wervingsproces?',
+      'Wat is het verband tussen doorlooptijd en kandidaatuitval?',
+      'Welke variabelen zijn een rode haring?',
+      'Wat is de financiële impact van lange doorlooptijden?',
+    ]
+  }
+];
+
+function buildIntroCards(){
+  const container=document.getElementById('intro-scenario-cards');
+  INTRO_SCENARIOS.forEach(sc=>{
+    const card=document.createElement('div');
+    card.className='sc-intro-card';
+    card.style.borderColor=sc.color+'60';
+    card.addEventListener('mouseenter',()=>card.style.borderColor=sc.color);
+    card.addEventListener('mouseleave',()=>card.style.borderColor=sc.color+'60');
+
+    const glow=document.createElement('div');glow.className='sc-glow';
+    glow.style.background=`radial-gradient(circle at top right,${sc.color}22,transparent 70%)`;
+    card.appendChild(glow);
+
+    const ic=document.createElement('div');ic.className='sc-ic';ic.textContent=sc.icon;card.appendChild(ic);
+
+    const tag=document.createElement('div');tag.className='sc-tag';
+    tag.style.background=sc.color+'20';tag.style.color=sc.color;tag.textContent=sc.tag;card.appendChild(tag);
+
+    const h4=document.createElement('h4');h4.textContent=sc.title;h4.style.color=sc.color;card.appendChild(h4);
+    const sub=document.createElement('div');sub.className='sc-sub';sub.textContent=sc.sub;card.appendChild(sub);
+    const desc=document.createElement('div');desc.className='sc-desc';desc.textContent=sc.desc;card.appendChild(desc);
+
+    const opdDiv=document.createElement('div');opdDiv.className='sc-opdracht';
+    opdDiv.style.borderLeftColor=sc.color;
+    const opLbl=document.createElement('strong');opLbl.textContent='📋 Jouw opdracht';opdDiv.appendChild(opLbl);
+    opdDiv.appendChild(document.createTextNode(sc.opdracht));
+    card.appendChild(opdDiv);
+
+    const vLabel=document.createElement('div');vLabel.style.cssText='font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px';
+    vLabel.textContent='Analysevragen';card.appendChild(vLabel);
+    const vList=document.createElement('ul');vList.style.cssText='padding-left:16px;margin-bottom:14px';
+    sc.vragen.forEach(q=>{
+      const li=document.createElement('li');li.style.cssText='font-size:12px;color:#64748b;line-height:1.7';li.textContent=q;vList.appendChild(li);
+    });
+    card.appendChild(vList);
+
+    const cta=document.createElement('div');cta.className='sc-cta';cta.style.color=sc.color;
+    cta.textContent='Open dashboard →';card.appendChild(cta);
+
+    card.addEventListener('click',()=>{
+      showDashboard(sc.id);
+    });
+    container.appendChild(card);
+  });
+}
+
+function showDashboard(scId){
+  document.getElementById('intro').style.display='none';
+  document.getElementById('dashboard-wrap').style.display='';
+  document.querySelectorAll('.sc-btn').forEach(b=>{
+    b.classList.toggle('active',b.dataset.sc===scId);
+  });
+  state.sc=scId;
+  state.years=[2020,2021,2022,2023,2024];
+  render();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+document.getElementById('btn-back-intro').addEventListener('click',()=>{
+  document.getElementById('dashboard-wrap').style.display='none';
+  document.getElementById('intro').style.display='';
+  window.scrollTo({top:0,behavior:'smooth'});
+});
+
+buildIntroCards();
+
+</script>
+</body>
+</html>
