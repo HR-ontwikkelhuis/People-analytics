@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>People Analytics — Ziekteverzuim</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0f172a;color:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif;min-height:100vh}
+::-webkit-scrollbar{width:6px;background:#1e293b}
+::-webkit-scrollbar-thumb{background:#334155;border-radius:3px}
+#app{padding:20px;max-width:1400px;margin:0 auto}
+
+.topbar{display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;border-bottom:1px solid #1e293b;padding-bottom:16px;flex-wrap:wrap}
+.logo{background:linear-gradient(135deg,#1a56db,#7c3aed);border-radius:8px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;margin-top:2px}
+.topbar h1{font-size:19px;font-weight:800;letter-spacing:-0.02em;line-height:1.2}
+.topbar h1 span{font-weight:400;color:#94a3b8;font-size:12px;margin-left:6px}
+.org-info{margin-top:6px;display:flex;flex-wrap:wrap;gap:14px}
+.org-chip{font-size:11px;color:#64748b;display:flex;align-items:center;gap:4px}
+.org-chip b{color:#94a3b8;font-weight:600}
+
+.org-context{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:14px 18px;margin-bottom:16px;font-size:12px;color:#94a3b8;line-height:1.7}
+.org-context strong{color:#f1f5f9;display:block;margin-bottom:8px;font-size:13px}
+.ctx-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:4px 24px}
+.ctx-row{display:flex;gap:6px}
+.ctx-lbl{color:#475569;min-width:148px;flex-shrink:0}
+
+.btn-primary{padding:10px 22px;background:#3b82f6;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s}
+.btn-primary:hover{background:#2563eb}
+.btn-primary:disabled{background:#1e3a5f;color:#475569;cursor:not-allowed}
+.btn-ghost{padding:7px 16px;background:transparent;border:1px solid #334155;border-radius:8px;font-size:12px;font-weight:600;color:#64748b;cursor:pointer;transition:all .15s}
+.btn-ghost:hover{border-color:#64748b;color:#f1f5f9}
+
+/* ─── INTRO ─── */
+#screen-intro{max-width:780px;margin:0 auto}
+.intro-hero{text-align:center;padding:36px 20px 28px}
+.intro-pill{display:inline-block;background:#1e3a5f;color:#60a5fa;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 12px;border-radius:20px;margin-bottom:16px}
+.intro-hero h2{font-size:26px;font-weight:800;margin-bottom:10px;line-height:1.2}
+.intro-hero h2 span{color:#3b82f6}
+.intro-hero p{font-size:14px;color:#64748b;line-height:1.7;margin-bottom:22px}
+.opdracht-box{background:#1e293b;border:1px solid #334155;border-left:3px solid #3b82f6;border-radius:10px;padding:16px 20px;text-align:left;margin-bottom:20px}
+.opdracht-box h3{font-size:13px;font-weight:700;color:#93c5fd;margin-bottom:8px}
+.opdracht-box p{font-size:13px;color:#94a3b8;line-height:1.7;margin-bottom:10px}
+.opdracht-box ul{padding-left:18px}
+.opdracht-box li{font-size:12px;color:#64748b;line-height:1.9}
+.hoe-werkt{background:#0f172a;border:1px solid #1e293b;border-radius:10px;padding:16px 20px;margin-bottom:20px;text-align:left}
+.hoe-werkt h3{font-size:12px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px}
+.hoe-stap{display:flex;gap:12px;margin-bottom:10px;align-items:flex-start}
+.hoe-stap:last-child{margin-bottom:0}
+.hoe-num{width:22px;height:22px;border-radius:50%;background:#1e3a5f;border:1px solid #3b82f6;color:#60a5fa;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.hoe-stap p{font-size:12px;color:#94a3b8;line-height:1.6}
+.hoe-stap p strong{color:#f1f5f9}
+.intro-footer{font-size:11px;color:#334155;text-align:center;margin-top:14px;padding-bottom:30px}
+
+/* ─── PICKER ─── */
+.picker-header{display:flex;align-items:center;gap:12px;margin-bottom:6px;flex-wrap:wrap}
+.picker-header h2{font-size:17px;font-weight:800;flex:1}
+.counter-badge{background:#1e293b;border:1px solid #334155;border-radius:20px;padding:6px 16px;font-size:13px;font-weight:700;white-space:nowrap}
+.counter-badge .cnt{color:#3b82f6}
+.counter-badge .cnt.max{color:#10b981}
+.picker-sub{font-size:12px;color:#64748b;margin-bottom:16px;line-height:1.6}
+.picker-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+.pick-card{background:#1e293b;border:2px solid #334155;border-radius:10px;padding:12px 14px;cursor:pointer;transition:all .15s;position:relative}
+.pick-card:hover:not(.pick-disabled){border-color:#3b82f6;background:#162032}
+.pick-card.pick-sel{border-color:#3b82f6;background:#162032}
+.pick-card.pick-disabled{opacity:.35;cursor:not-allowed}
+.pick-check{display:none;position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;background:#3b82f6;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff}
+.pick-card.pick-sel .pick-check{display:flex}
+.pick-icon{font-size:22px;margin-bottom:6px}
+.pick-title{font-size:12px;font-weight:700;color:#f1f5f9;margin-bottom:3px;line-height:1.3}
+.pick-sub2{font-size:10px;color:#475569;margin-bottom:5px}
+.pick-desc{font-size:11px;color:#64748b;line-height:1.5}
+.picker-actions{display:flex;align-items:center;gap:12px;justify-content:flex-end}
+.picker-hint{font-size:12px;color:#475569;flex:1}
+
+/* ─── DASHBOARD ─── */
+.dash-nav{display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap}
+.controls{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.controls label{font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.06em}
+.year-btn{padding:4px 11px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;border:1px solid #334155;background:transparent;color:#64748b;transition:all .12s}
+.year-btn.on{border-color:#3b82f6;background:#3b82f618;color:#3b82f6}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:8px;margin-bottom:16px}
+.kpi{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:11px 13px;cursor:pointer;transition:border-color .15s}
+.kpi:hover{border-color:#3b82f6}
+.kpi.active-kpi{border-color:#3b82f6;background:#1e3a5f}
+.kpi-lbl{font-size:9.5px;color:#64748b;text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:4px}
+.kpi-val{font-size:22px;font-weight:800;line-height:1;font-family:monospace}
+.kpi-val span{font-size:11px;font-weight:400;color:#64748b}
+.kpi-delta{font-size:10px;font-weight:600;margin-top:3px}
+.kpi-detail{background:#162032;border:1px solid #1e3a5f;border-radius:10px;padding:14px 16px;margin-bottom:16px;display:none}
+.kpi-detail.open{display:block}
+.kpi-detail h4{font-size:13px;font-weight:700;color:#93c5fd;margin-bottom:10px}
+.dashboard-grid{display:grid;gap:12px;grid-template-columns:repeat(3,1fr)}
+.chart-card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:14px 16px}
+.chart-card.wide{grid-column:span 2}
+.chart-card.full{grid-column:span 3}
+.chart-card h3{font-size:12px;font-weight:700;color:#f1f5f9;margin-bottom:2px}
+.chart-card .sub{font-size:10px;color:#475569;margin-bottom:8px}
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.leg-item{display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b}
+.leg-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+svg.chart{width:100%;overflow:visible;display:block}
+.ax{font-size:9px;fill:#475569;font-family:'Segoe UI',Arial,sans-serif}
+.gl{stroke:#1e3a5f;stroke-width:1}
+
+/* VERHAALKADER */
+.verhaal-card{background:#0d1f33;border:1px solid #1e3a5f;border-radius:12px;padding:20px;grid-column:span 3;margin-top:4px}
+.verhaal-card h3{font-size:13px;font-weight:800;color:#93c5fd;margin-bottom:3px}
+.verhaal-card .vsub{font-size:11px;color:#334155;margin-bottom:14px}
+.verhaal-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.verhaal-step{background:#1e293b;border-radius:8px;padding:12px}
+.vnum{width:22px;height:22px;border-radius:50%;background:#1e3a5f;border:1px solid #3b82f6;color:#60a5fa;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-bottom:8px}
+.verhaal-step h4{font-size:11px;font-weight:700;color:#f1f5f9;margin-bottom:4px}
+.verhaal-step p{font-size:10px;color:#64748b;line-height:1.6}
+
+.empty-dash{grid-column:span 3;text-align:center;padding:40px;color:#334155;font-size:14px}
+
+@media(max-width:1100px){.picker-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:820px){
+  .picker-grid{grid-template-columns:repeat(2,1fr)}
+  .dashboard-grid{grid-template-columns:repeat(2,1fr)}
+  .chart-card.wide,.chart-card.full{grid-column:span 2}
+  .verhaal-grid{grid-template-columns:repeat(2,1fr)}
+  .verhaal-card{grid-column:span 2}
+}
+@media(max-width:520px){
+  .picker-grid{grid-template-columns:1fr 1fr}
+  .dashboard-grid{grid-template-columns:1fr}
+  .chart-card.wide,.chart-card.full{grid-column:span 1}
+  .verhaal-grid{grid-template-columns:1fr}
+  .verhaal-card{grid-column:span 1}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ══════════ SCREEN 1: INTRO ══════════ -->
+<div id="screen-intro">
+  <div class="intro-hero">
+    <div class="intro-pill">🎓 Masterclass People Analytics</div>
+    <h2>Wat verklaart het <span>ziekteverzuim</span>?</h2>
+    <p>Je werkt als HR-analist bij Meridian BV. Het management maakt zich zorgen over oplopend verzuim en vraagt jou de data te analyseren. Jouw taak: ontdek verbanden, onderscheid oorzaken van symptomen en presenteer een onderbouwd verhaal.</p>
+    <div class="opdracht-box">
+      <h3>📋 Jouw opdracht</h3>
+      <p>Analyseer de verzuimdata van 2020–2024. Welke trend zie je? Welke variabelen hangen samen met het verzuim? Formuleer een onderbouwde conclusie én een aanbeveling voor het management.</p>
+      <ul>
+        <li>Wanneer begint het verzuim te stijgen — en welk type verzuim precies?</li>
+        <li>Welke variabelen bewegen mee, en welke zijn een afleiding?</li>
+        <li>Wat is de mogelijke oorzaak — en hoe onderbouw je dat?</li>
+        <li>Wat kost dit de organisatie, en wat zou je adviseren?</li>
+      </ul>
+    </div>
+    <div class="hoe-werkt">
+      <h3>Hoe werkt dit?</h3>
+      <div class="hoe-stap"><div class="hoe-num">1</div><p><strong>Kies je grafieken</strong> — Je kiest straks maximaal 9 van de 16 beschikbare grafieken. Niet alles is even relevant: jij bepaalt wat je nodig hebt om het verhaal te vertellen.</p></div>
+      <div class="hoe-stap"><div class="hoe-num">2</div><p><strong>Verken het dashboard</strong> — Gebruik de jaarfilter om in te zoomen op specifieke periodes. Klik op een KPI-tegel voor de volledige trendgrafiek.</p></div>
+      <div class="hoe-stap"><div class="hoe-num">3</div><p><strong>Bouw je verhaal</strong> — Onderaan het dashboard vind je een verhaalkader. Gebruik dat als structuur voor je presentatie aan het management.</p></div>
+    </div>
+  </div>
+
+  <div class="org-context" style="max-width:780px;margin:0 auto 16px">
+    <strong>Meridian BV — organisatiecontext</strong>
+    <div class="ctx-grid" id="intro-ctx"></div>
+  </div>
+
+  <div style="text-align:center;margin-bottom:8px">
+    <button class="btn-primary" onclick="showPicker()">Kies je grafieken →</button>
+  </div>
+  <p class="intro-footer">Data zijn gefingeerd en uitsluitend bedoeld voor leerdoeleinden · Meridian BV is een fictieve organisatie</p>
+</div>
+
+<!-- ══════════ SCREEN 2: PICKER ══════════ -->
+<div id="screen-picker" style="display:none">
+  <div class="picker-header">
+    <h2>Kies je grafieken</h2>
+    <div class="counter-badge">Gekozen: <span class="cnt" id="sel-count">0</span> van max. 9</div>
+    <button class="btn-ghost" onclick="showIntro()">← Terug</button>
+  </div>
+  <p class="picker-sub">Kies maximaal 9 grafieken die jij het meest relevant vindt om het verhaal te vertellen aan het management. Denk na: welke data helpt je begrijpen <em>wat</em> er speelt én <em>waarom</em>? Niet alles is even bruikbaar.</p>
+  <div class="picker-grid" id="picker-grid"></div>
+  <div class="picker-actions">
+    <span class="picker-hint" id="picker-hint"></span>
+    <button class="btn-ghost" onclick="showIntro()">Annuleren</button>
+    <button class="btn-primary" id="btn-confirm" disabled onclick="showDashboard()">Bekijk dashboard →</button>
+  </div>
+</div>
+
+<!-- ══════════ SCREEN 3: DASHBOARD ══════════ -->
+<div id="screen-dashboard" style="display:none">
+  <div class="topbar">
+    <div class="logo">📊</div>
+    <div>
+      <h1>Ziekteverzuim Dashboard <span>Meridian BV · 2020–2024</span></h1>
+      <div class="org-info">
+        <div class="org-chip">👥 <b>500</b> medewerkers</div>
+        <div class="org-chip">🏭 Sales · Ops · IT · HR · Finance</div>
+        <div class="org-chip">📍 Utrecht · Amsterdam · Eindhoven</div>
+      </div>
+    </div>
+    <div class="dash-nav">
+      <button class="btn-ghost" onclick="showPicker()">✎ Grafieken aanpassen</button>
+      <button class="btn-ghost" onclick="showIntro()">← Opdracht</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <label>Jaar:</label>
+    <div id="year-btns"></div>
+  </div>
+
+  <div class="kpi-row" id="kpi-row"></div>
+  <div class="kpi-detail" id="kpi-detail">
+    <h4 id="kpi-detail-title"></h4>
+    <div id="kpi-detail-chart"></div>
+  </div>
+
+  <div class="dashboard-grid" id="chart-grid"></div>
+</div>
+
+</div><!-- /app -->
+
+<script>
+// ─── RNG ──────────────────────────────────────────────────────────────────
+let _s=42;
+function sr(){_s=(_s*1664525+1013904223)&0xffffffff;return((_s>>>0)/4294967296);}
+function srr(a,b){return a+(b-a)*sr();}
+
+// ─── MONTHS ───────────────────────────────────────────────────────────────
+const ML=['Jan','Feb','Mrt','Apr','Mei','Jun','Jul','Aug','Sep','Okt','Nov','Dec'];
+const MONTHS=[];
+for(let y=2020;y<=2024;y++) for(let m=0;m<12;m++)
+  MONTHS.push({key:`${y}-${m}`,label:`${ML[m]}'${String(y).slice(2)}`,year:y,month:m,idx:MONTHS.length});
+
+// ─── DATA ─────────────────────────────────────────────────────────────────
+// Verhaal: langdurend verzuim stijgt 2021-2023, daalt wanneer % ongetrainde LG daalt.
+// Kortdurend: seizoenspatroon, géén LG-effect → rode haring voor oorzaak.
+_s=42;
+const DATA=MONTHS.map(({key,label,year,month,idx})=>{
+  const yme=year===2021?.5:year===2022?1.7:year===2023&&month<6?2.3:year===2023?1.0:year===2024?.25:0;
+  const sea=Math.sin(month/11*Math.PI)*-.4+(month<2||month>10?.7:0);
+
+  const lang=Math.max(.4,1.2+yme+sea*.6+srr(-.15,.15));
+  const kort=Math.max(1.8,2.8+Math.sin(month/11*Math.PI*1.5)*.5+srr(-.2,.2));
+  const verzuim=+(lang+kort).toFixed(2);
+
+  const totLG=year<2021?8:year===2021?14:year===2022?22:year===2023&&month<6?26:year===2023?20:12;
+  const trained=year<2022?0:year===2022?Math.min(totLG,Math.floor(month*.55)):
+    year===2023&&month<6?Math.floor(totLG*.3):year===2023?Math.floor(totLG*.72):totLG;
+  const untrainedPct=totLG>0?Math.round((totLG-trained)/totLG*100):0;
+
+  const kostenVerzuim=Math.round((lang*500*18+kort*180*18)*(1+srr(-.04,.04)));
+  const productiviteit=Math.max(55,Math.min(96,87-lang*3.2+srr(-1.5,1.5)));
+  const meldFreq=+(kort*.31+srr(-.04,.04)).toFixed(2);
+  const meldDuur=+(7.8+srr(-.9,.9)).toFixed(1); // plat — rode haring
+  const reIntegratie=Math.round(Math.max(0,lang*2.8+srr(-.4,.4)));
+
+  const tS={Sales:verzuim*1.32,Ops:verzuim*1.52,IT:verzuim*.66,HR:verzuim*.87,Finance:verzuim*.80};
+
+  // Rode haringen
+  const koffie=Math.round(375+Math.sin(month/5*Math.PI)*38+srr(-18,18));
+  const itTickets=Math.round(118+idx*.38+srr(-14,14)); // licht stijgend tgv groei, niet relevant
+  const werkplekTevr=+(72+srr(-4,4)).toFixed(1);       // plat
+  const kantoorBez=+(65+Math.sin(month/5*Math.PI)*7+srr(-3,3)).toFixed(1); // seizoen, geen signaal
+  const parkeer=Math.round(148+srr(-15,15));             // plat
+
+  return{key,label,year,month,idx,
+    verzuim,lang:+lang.toFixed(2),kort:+kort.toFixed(2),
+    untrainedPct,kostenVerzuim,
+    productiviteit:+productiviteit.toFixed(1),
+    meldFreq,meldDuur,reIntegratie,
+    teamSales:+tS.Sales.toFixed(2),teamOps:+tS.Ops.toFixed(2),
+    teamIT:+tS.IT.toFixed(2),teamHR:+tS.HR.toFixed(2),teamFinance:+tS.Finance.toFixed(2),
+    koffie,itTickets,werkplekTevr,kantoorBez,parkeer
+  };
+});
+
+// ─── ORG CONTEXT ──────────────────────────────────────────────────────────
+const CTX_ROWS=[
+  ['Organisatie','Meridian BV, 500 medewerkers, zakelijke dienstverlening'],
+  ['Periode','Januari 2020 t/m december 2024 · maandelijkse meting'],
+  ['Afdelingen','Sales, Operations, IT, HR, Finance · 3 locaties (Utrecht, Amsterdam, Eindhoven)'],
+  ['Leidinggevenden','Organisatie is gegroeid; aandeel jonge LG (<3 jr. ervaring) is de afgelopen jaren gestegen'],
+  ['Beleid','Er is een verzuimprotocol; deelname aan leiderschapstraining is niet verplicht'],
+  ['Benchmark','CBS landelijk gemiddeld verzuim: 4,0% · langdurend: 1,2%'],
+  ['Kosten','Doorbetalingsverplichting 2 jaar · gemiddeld €450/dag voor langdurend verzuim'],
+];
+
+function buildCtx(elId){
+  const el=document.getElementById(elId);if(!el)return;el.innerHTML='';
+  CTX_ROWS.forEach(([lbl,val])=>{
+    const row=document.createElement('div');row.className='ctx-row';
+    const l=document.createElement('span');l.className='ctx-lbl';l.textContent=lbl+':';
+    const v=document.createElement('span');v.textContent=val;
+    row.appendChild(l);row.appendChild(v);el.appendChild(row);
+  });
+}
+
+// ─── SVG HELPERS ──────────────────────────────────────────────────────────
+function ns(tag,a,ch){
+  const el=document.createElementNS('http://www.w3.org/2000/svg',tag);
+  for(const[k,v]of Object.entries(a||{}))el.setAttribute(k,v);
+  for(const c of(ch||[]))el.appendChild(typeof c==='string'?document.createTextNode(c):c);
+  return el;
+}
+
+function lineChart(data,series,opts={}){
+  const W=opts.w||440,H=opts.h||130,ml=opts.ml||42,mr=opts.mr||10,mt=opts.mt||8,mb=opts.mb||22;
+  const pw=W-ml-mr,ph=H-mt-mb;
+  const allV=series.flatMap(s=>data.map(d=>d[s.key]).filter(v=>v!=null&&!isNaN(v)));
+  if(!allV.length)return ns('svg',{viewBox:`0 0 ${W} ${H}`,class:'chart'});
+  const lo=opts.min!=null?opts.min:Math.min(...allV)*.93;
+  const hi=opts.max!=null?opts.max:Math.max(...allV)*1.06;
+  const xp=i=>ml+i/(Math.max(data.length-1,1))*pw;
+  const yp=v=>mt+ph-(v-lo)/(hi-lo||1)*ph;
+  const svg=ns('svg',{viewBox:`0 0 ${W} ${H}`,class:'chart'});
+  for(let i=0;i<=4;i++){
+    const v=lo+(hi-lo)*i/4,y=yp(v);
+    svg.appendChild(ns('line',{x1:ml,y1:y,x2:ml+pw,y2:y,class:'gl'}));
+    const lbl=v>=10000?'€'+Math.round(v/1000)+'k':+(v).toFixed(v<10?1:0)+'';
+    svg.appendChild(ns('text',{x:ml-3,y:y+3,class:'ax','text-anchor':'end'},[lbl]));
+  }
+  const step=Math.ceil(data.length/9);
+  data.forEach((d,i)=>{if(i%step===0)svg.appendChild(ns('text',{x:xp(i),y:H-mb+12,class:'ax','text-anchor':'middle'},[d.label]));});
+  if(opts.bench!=null){
+    const y=yp(opts.bench);
+    svg.appendChild(ns('line',{x1:ml,y1:y,x2:ml+pw,y2:y,stroke:'#475569','stroke-width':'1.2','stroke-dasharray':'5 3'}));
+  }
+  series.forEach(s=>{
+    const col=s.color||'#3b82f6';
+    const vals=data.map(d=>d[s.key]);
+    if(s.fill){
+      const pts=[`${xp(0)},${yp(lo)}`,...vals.map((v,i)=>`${xp(i)},${yp(v??lo)}`)].concat([`${xp(data.length-1)},${yp(lo)}`]);
+      svg.appendChild(ns('polygon',{points:pts.join(' '),fill:col,opacity:'.15'}));
+    }
+    svg.appendChild(ns('polyline',{points:vals.map((v,i)=>`${xp(i)},${yp(v??lo)}`).join(' '),fill:'none',stroke:col,'stroke-width':s.w||1.8,'stroke-dasharray':s.dash||''}));
+  });
+  return svg;
+}
+
+function barChart(data,keys,colors,opts={}){
+  const W=opts.w||440,H=opts.h||140,ml=opts.ml||42,mr=opts.mr||8,mt=opts.mt||8,mb=opts.mb||22;
+  const pw=W-ml-mr,ph=H-mt-mb;
+  const maxV=Math.max(...data.map(d=>Math.max(...keys.map(k=>d[k]||0))))*1.1;
+  const svg=ns('svg',{viewBox:`0 0 ${W} ${H}`,class:'chart'});
+  for(let i=0;i<=4;i++){
+    const v=maxV*i/4,y=mt+ph-ph*i/4;
+    svg.appendChild(ns('line',{x1:ml,y1:y,x2:ml+pw,y2:y,class:'gl'}));
+    svg.appendChild(ns('text',{x:ml-3,y:y+3,class:'ax','text-anchor':'end'},[+(v).toFixed(v<10?1:0)+'']));
+  }
+  const bW=Math.max(2,pw/data.length*.6/keys.length);
+  data.forEach((d,i)=>{
+    const cx=ml+i/(data.length-.5)*pw;
+    svg.appendChild(ns('text',{x:cx,y:H-mb+12,class:'ax','text-anchor':'middle'},[d.year||d.label||'']));
+    const tot=bW*keys.length;
+    keys.forEach((k,ki)=>{const v=d[k]||0,bh=v/maxV*ph;svg.appendChild(ns('rect',{x:cx-tot/2+ki*bW,y:mt+ph-bh,width:Math.max(1,bW-1),height:Math.max(0,bh),fill:colors[ki],rx:'2'}));});
+  });
+  return svg;
+}
+
+// ─── DOM HELPERS ──────────────────────────────────────────────────────────
+function mkLegend(items){
+  const el=document.createElement('div');el.className='legend';
+  items.forEach(({c,l})=>{
+    const d=document.createElement('div');d.className='leg-dot';d.style.background=c;
+    const w=document.createElement('div');w.className='leg-item';w.appendChild(d);w.appendChild(document.createTextNode(l));
+    el.appendChild(w);
+  });
+  return el;
+}
+
+function addCard(grid,title,sub,svg,legend,cls){
+  const el=document.createElement('div');el.className='chart-card'+(cls?' '+cls:'');
+  const h=document.createElement('h3');h.textContent=title;el.appendChild(h);
+  if(sub){const s=document.createElement('div');s.className='sub';s.textContent=sub;el.appendChild(s);}
+  el.appendChild(svg);if(legend)el.appendChild(legend);
+  grid.appendChild(el);
+}
+
+function mkKpi(lbl,val,unit,delta,color,key,higherIsBad){
+  const el=document.createElement('div');el.className='kpi';
+  const l=document.createElement('div');l.className='kpi-lbl';l.textContent=lbl;el.appendChild(l);
+  const v=document.createElement('div');v.className='kpi-val';v.style.color=color||'#3b82f6';
+  v.textContent=val;
+  if(unit){const s=document.createElement('span');s.textContent=' '+unit;v.appendChild(s);}
+  el.appendChild(v);
+  if(delta!=null&&!isNaN(delta)&&Math.abs(delta)>.001){
+    const d=document.createElement('div');d.className='kpi-delta';
+    const pos=delta>0;
+    d.textContent=(pos?'▲ +':'▼ ')+Math.abs(delta).toFixed(Math.abs(delta)<10?1:0)+(unit?' '+unit:'');
+    d.style.color=higherIsBad?(pos?'#ef4444':'#10b981'):(pos?'#10b981':'#ef4444');
+    el.appendChild(d);
+  }
+  if(key) el.addEventListener('click',()=>showKpiDetail(el,lbl,unit,key,color));
+  return el;
+}
+
+function showKpiDetail(el,lbl,unit,key,color){
+  const detail=document.getElementById('kpi-detail');
+  const prev=document.querySelector('.kpi.active-kpi');
+  if(prev&&prev!==el)prev.classList.remove('active-kpi');
+  if(el.classList.contains('active-kpi')){el.classList.remove('active-kpi');detail.classList.remove('open');return;}
+  el.classList.add('active-kpi');
+  document.getElementById('kpi-detail-title').textContent=lbl+(unit?' ('+unit+')':'');
+  const dc=document.getElementById('kpi-detail-chart');dc.innerHTML='';
+  const data=DATA.filter(d=>state.years.includes(d.year));
+  dc.appendChild(lineChart(data,[{key,color:color||'#3b82f6',fill:true,w:2}],{w:820,h:160}));
+  dc.appendChild(mkLegend([{c:color||'#3b82f6',l:lbl}]));
+  detail.classList.add('open');
+  detail.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+// ─── CHART DEFINITIONS (16 stuks) ─────────────────────────────────────────
+const CHART_DEFS=[
+  {
+    id:'verzuim_totaal',icon:'📊',
+    title:'Totaal verzuim %',sub:'Maandelijks, alle medewerkers',
+    desc:'Het gecombineerde verzuimpercentage van alle afdelingen. Eerste beeld van de omvang.',
+    render(data,grid){
+      addCard(grid,'Totaal verzuim %','Gecombineerd per maand (benchmark: 4,0%)',
+        lineChart(data,[{key:'verzuim',color:'#3b82f6',fill:true,w:2}],{min:0,max:8,bench:4}),
+        mkLegend([{c:'#3b82f6',l:'Totaal %'},{c:'#475569',l:'─ ─ benchmark 4,0%'}]));
+    }
+  },
+  {
+    id:'lang',icon:'🔴',
+    title:'Langdurend verzuim (>6 wk)',sub:'Meldingen langer dan 6 weken',
+    desc:'Langdurig verzuim is kostbaar en wijst op structurele problematiek. Hoe ontwikkelt dit zich?',
+    render(data,grid){
+      addCard(grid,'Langdurend verzuim (>6 weken)','Percentage medewerkers per maand',
+        lineChart(data,[{key:'lang',color:'#f97316',fill:true,w:2}],{min:0,max:5}),
+        mkLegend([{c:'#f97316',l:'Langdurend %'}]));
+    }
+  },
+  {
+    id:'kort',icon:'🟡',
+    title:'Kortdurend verzuim (<6 wk)',sub:'Meldingen korter dan 6 weken',
+    desc:'Kortdurend verzuim heeft een ander patroon dan langdurend. Bewegen ze gelijk?',
+    render(data,grid){
+      addCard(grid,'Kortdurend verzuim (<6 weken)','Percentage medewerkers per maand',
+        lineChart(data,[{key:'kort',color:'#60a5fa',fill:true,w:2}],{min:1,max:5}),
+        mkLegend([{c:'#60a5fa',l:'Kortdurend %'}]));
+    }
+  },
+  {
+    id:'kosten',icon:'💶',
+    title:'Kosten ziekteverzuim (€)',sub:'Maandelijkse kosten incl. loondoorbetaling',
+    desc:'Wat is de financiële impact per maand? Gebruik dit om urgentie te onderbouwen bij management.',
+    render(data,grid){
+      addCard(grid,'Kosten ziekteverzuim per maand','Incl. loondoorbetaling en vervanging (€)',
+        lineChart(data,[{key:'kostenVerzuim',color:'#ef4444',fill:true,w:2}],{}),
+        mkLegend([{c:'#ef4444',l:'Kosten €/mnd'}]));
+    }
+  },
+  {
+    id:'reintegratie',icon:'🔄',
+    title:'Re-integratietrajecten',sub:'Lopende trajecten per maand',
+    desc:'Hoeveel medewerkers zijn actief in re-integratie? Volgt dit het patroon van het langdurig verzuim?',
+    render(data,grid){
+      addCard(grid,'Actieve re-integratietrajecten','Aantal lopende trajecten per maand',
+        lineChart(data,[{key:'reIntegratie',color:'#a855f7',fill:true,w:2}],{min:0}),
+        mkLegend([{c:'#a855f7',l:'Re-integraties'}]));
+    }
+  },
+  {
+    id:'productiviteit',icon:'⚡',
+    title:'Productiviteitsscore teams',sub:'Gemiddeld per maand, schaal 0–100',
+    desc:'Wat is het effect van het verzuim op teamproductiviteit? Beweegt dit mee?',
+    render(data,grid){
+      addCard(grid,'Productiviteitsscore (teams)','Gemiddeld per maand, schaal 0–100',
+        lineChart(data,[{key:'productiviteit',color:'#10b981',fill:true,w:2}],{min:50,max:100}),
+        mkLegend([{c:'#10b981',l:'Productiviteit %'}]));
+    }
+  },
+  {
+    id:'ongetraind',icon:'🎓',
+    title:'% Ongetrainde leidinggevenden',sub:'LG zonder afgeronde leiderschapstraining',
+    desc:'Welk deel van de leidinggevenden heeft de leiderschapstraining nog niet afgerond?',
+    render(data,grid){
+      addCard(grid,'% Ongetrainde leidinggevenden','Aandeel LG zonder afgeronde training',
+        lineChart(data,[{key:'untrainedPct',color:'#f59e0b',fill:true,w:2}],{min:0,max:100}),
+        mkLegend([{c:'#f59e0b',l:'% ongetraind'}]));
+    }
+  },
+  {
+    id:'teams',icon:'🏢',
+    title:'Verzuim per afdeling',sub:'Jaargemiddelde per team',
+    desc:'Welke afdelingen scoren hoger? Verraadt de verdeling iets over context of leidinggevenden?',
+    render(data,grid){
+      const years=[...new Set(data.map(d=>d.year))];
+      const td=years.map(y=>{
+        const yd=data.filter(d=>d.year===y);
+        const avg=k=>+(yd.reduce((s,d)=>s+d[k],0)/yd.length).toFixed(2);
+        return{year:String(y),Sales:avg('teamSales'),Ops:avg('teamOps'),IT:avg('teamIT'),HR:avg('teamHR'),Finance:avg('teamFinance')};
+      });
+      addCard(grid,'Verzuim per afdeling','Jaargemiddelde per team',
+        barChart(td,['Sales','Ops','IT','HR','Finance'],['#3b82f6','#f97316','#10b981','#a855f7','#f59e0b'],{h:150}),
+        mkLegend([{c:'#3b82f6',l:'Sales'},{c:'#f97316',l:'Ops'},{c:'#10b981',l:'IT'},{c:'#a855f7',l:'HR'},{c:'#f59e0b',l:'Finance'}]),
+        'wide');
+    }
+  },
+  {
+    id:'lang_vs_kort',icon:'⚖️',
+    title:'Langdurend vs kortdurend',sub:'Twee verzuimtypen naast elkaar',
+    desc:'Bewegen beide typen gelijk op de tijdlijn, of loopt één type sterk voor of achter?',
+    render(data,grid){
+      const cf=document.createElement('div');cf.className='chart-card full';
+      const h=document.createElement('h3');h.textContent='Langdurend vs kortdurend vergeleken';cf.appendChild(h);
+      const s=document.createElement('div');s.className='sub';s.textContent='Twee verzuimtypen naast elkaar op tijdlijn';cf.appendChild(s);
+      const ov=document.createElement('div');ov.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:12px';
+      ov.appendChild(lineChart(data,[{key:'kort',color:'#60a5fa',fill:true,w:2}],{h:120,min:1,max:5}));
+      ov.appendChild(lineChart(data,[{key:'lang',color:'#f97316',fill:true,w:2}],{h:120,min:0,max:5}));
+      cf.appendChild(ov);
+      cf.appendChild(mkLegend([{c:'#60a5fa',l:'Kortdurend %'},{c:'#f97316',l:'Langdurend %'}]));
+      grid.appendChild(cf);
+    }
+  },
+  {
+    id:'meldfreq',icon:'📋',
+    title:'Meldingsfrequentie',sub:'Gem. meldingen per medewerker per maand',
+    desc:'Hoe vaak meldt iemand zich ziek? Geeft dit ander inzicht dan het verzuimpercentage?',
+    render(data,grid){
+      addCard(grid,'Meldingsfrequentie per medewerker','Gemiddeld aantal meldingen per maand',
+        lineChart(data,[{key:'meldFreq',color:'#818cf8',fill:true,w:2}],{min:0}),
+        mkLegend([{c:'#818cf8',l:'Meldingsfrequentie'}]));
+    }
+  },
+  {
+    id:'meldduur',icon:'⏱️',
+    title:'Gemiddelde meldingsduur (dgn)',sub:'Kalenderdagen per verzuimmelding',
+    desc:'Hoe lang duurt een gemiddelde melding? Geeft dit je aanvullend inzicht naast het percentage?',
+    render(data,grid){
+      addCard(grid,'Gem. meldingsduur (dgn)','Kalenderdagen per verzuimmelding',
+        lineChart(data,[{key:'meldDuur',color:'#64748b',fill:false,w:1.5,dash:'5 3'}],{min:5,max:12}),
+        mkLegend([{c:'#64748b',l:'Meldingsduur (dgn)'}]));
+    }
+  },
+  {
+    id:'koffie',icon:'☕',
+    title:'Koffieverbruik kantoor',sub:'Maandverbruik in liters, alle locaties',
+    desc:'Totaal koffieverbruik per maand op alle kantoorlocaties van Meridian BV.',
+    render(data,grid){
+      addCard(grid,'Koffieverbruik kantoor (liter)','Maandverbruik over alle locaties',
+        lineChart(data,[{key:'koffie',color:'#92400e',fill:true,w:1.5}],{}),
+        mkLegend([{c:'#92400e',l:'Koffie (L/mnd)'}]));
+    }
+  },
+  {
+    id:'ittickets',icon:'💻',
+    title:'IT-supporttickets',sub:'Ingediende tickets per maand',
+    desc:'Aantal IT-hulpverzoeken dat medewerkers per maand indienen via de helpdesk.',
+    render(data,grid){
+      addCard(grid,'IT-supporttickets','Ingediende tickets per maand',
+        lineChart(data,[{key:'itTickets',color:'#475569',fill:false,w:1.5,dash:'5 3'}],{}),
+        mkLegend([{c:'#475569',l:'IT-tickets'}]));
+    }
+  },
+  {
+    id:'werkplek',icon:'🪑',
+    title:'Werkplek tevredenheid',sub:'Score werkplekinrichting, schaal 0–100',
+    desc:'Medewerkerstevredenheid met de fysieke werkplek en kantoorvoorzieningen.',
+    render(data,grid){
+      addCard(grid,'Werkplek tevredenheid','Score 0–100, jaarlijkse meting',
+        lineChart(data,[{key:'werkplekTevr',color:'#475569',fill:false,w:1.5,dash:'5 3'}],{min:50,max:100}),
+        mkLegend([{c:'#475569',l:'Werkplek tevr.'}]));
+    }
+  },
+  {
+    id:'kantoor',icon:'🏙️',
+    title:'Kantoorinloop per locatie',sub:'Gem. dagbezetting werkplekken (%)',
+    desc:'Gemiddeld percentage bezette werkplekken op een doordeweekse dag per vestiging.',
+    render(data,grid){
+      addCard(grid,'Kantoorinloop per locatie','% bezette werkplekken, gem. per dag',
+        lineChart(data,[{key:'kantoorBez',color:'#475569',fill:false,w:1.5,dash:'5 3'}],{min:40,max:85}),
+        mkLegend([{c:'#475569',l:'Bezettingsgraad %'}]));
+    }
+  },
+  {
+    id:'parkeer',icon:'🚗',
+    title:'Bezette parkeerplekken',sub:'Gem. per dag, alle locaties samen',
+    desc:'Gemiddeld aantal bezette parkeerplaatsen per dag over alle kantoorlocaties.',
+    render(data,grid){
+      addCard(grid,'Bezette parkeerplekken','Gemiddeld per dag, alle locaties',
+        lineChart(data,[{key:'parkeer',color:'#475569',fill:false,w:1.5,dash:'5 3'}],{}),
+        mkLegend([{c:'#475569',l:'Parkeerplekken bezet'}]));
+    }
+  }
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────
+const state={years:[2020,2021,2022,2023,2024],selected:new Set()};
+const MAX_SEL=9;
+
+// ─── SCREEN NAV ───────────────────────────────────────────────────────────
+function showIntro(){
+  document.getElementById('screen-intro').style.display='';
+  document.getElementById('screen-picker').style.display='none';
+  document.getElementById('screen-dashboard').style.display='none';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function showPicker(){
+  document.getElementById('screen-intro').style.display='none';
+  document.getElementById('screen-picker').style.display='';
+  document.getElementById('screen-dashboard').style.display='none';
+  buildPicker();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function showDashboard(){
+  if(state.selected.size===0)return;
+  document.getElementById('screen-intro').style.display='none';
+  document.getElementById('screen-picker').style.display='none';
+  document.getElementById('screen-dashboard').style.display='';
+  renderDashboard();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ─── PICKER ───────────────────────────────────────────────────────────────
+function buildPicker(){
+  const grid=document.getElementById('picker-grid');grid.innerHTML='';
+  CHART_DEFS.forEach(cd=>{
+    const sel=state.selected.has(cd.id);
+    const disabled=!sel&&state.selected.size>=MAX_SEL;
+    const card=document.createElement('div');
+    card.className='pick-card'+(sel?' pick-sel':'')+(disabled?' pick-disabled':'');
+
+    const chk=document.createElement('div');chk.className='pick-check';chk.textContent='✓';card.appendChild(chk);
+    const ic=document.createElement('div');ic.className='pick-icon';ic.textContent=cd.icon;card.appendChild(ic);
+    const t=document.createElement('div');t.className='pick-title';t.textContent=cd.title;card.appendChild(t);
+    const su=document.createElement('div');su.className='pick-sub2';su.textContent=cd.sub;card.appendChild(su);
+    const de=document.createElement('div');de.className='pick-desc';de.textContent=cd.desc;card.appendChild(de);
+
+    card.addEventListener('click',()=>{
+      if(disabled)return;
+      if(state.selected.has(cd.id)) state.selected.delete(cd.id);
+      else if(state.selected.size<MAX_SEL) state.selected.add(cd.id);
+      buildPicker();
+    });
+    grid.appendChild(card);
+  });
+
+  const n=state.selected.size;
+  const cnt=document.getElementById('sel-count');
+  cnt.textContent=n;cnt.className='cnt'+(n>=MAX_SEL?' max':'');
+  const btn=document.getElementById('btn-confirm');
+  btn.disabled=n===0;
+  btn.textContent=n===0?'Kies minstens 1 grafiek':`Bekijk dashboard (${n} grafiek${n===1?'':'en'}) →`;
+  document.getElementById('picker-hint').textContent=n>=MAX_SEL
+    ?'Maximum bereikt — deselecteer een kaart om een andere te kiezen.':'';
+}
+
+// ─── DASHBOARD ────────────────────────────────────────────────────────────
+function renderDashboard(){
+  // Year filter
+  const yb=document.getElementById('year-btns');yb.innerHTML='';
+  [2020,2021,2022,2023,2024].forEach(y=>{
+    const b=document.createElement('button');
+    b.className='year-btn'+(state.years.includes(y)?' on':'');
+    b.textContent=y;
+    b.onclick=()=>{
+      state.years=state.years.includes(y)
+        ?(state.years.length>1?state.years.filter(x=>x!==y):state.years)
+        :[...state.years,y].sort((a,b)=>a-b);
+      renderDashboard();
+    };
+    yb.appendChild(b);
+  });
+
+  const data=DATA.filter(d=>state.years.includes(d.year));
+  const latest=data[data.length-1]||{};
+  const prev=data.length>13?data[data.length-13]:data[0]||{};
+
+  // KPIs
+  const krow=document.getElementById('kpi-row');krow.innerHTML='';
+  document.getElementById('kpi-detail').classList.remove('open');
+  [
+    ['Kosten verzuim','€'+(latest.kostenVerzuim||0).toLocaleString('nl-NL'),'',null,'#ef4444','kostenVerzuim',true],
+    ['Totaal verzuim',(latest.verzuim||0).toFixed(2),'%',(latest.verzuim||0)-(prev.verzuim||0),'#3b82f6','verzuim',true],
+    ['Langdurend',(latest.lang||0).toFixed(2),'%',(latest.lang||0)-(prev.lang||0),'#f97316','lang',true],
+    ['Kortdurend',(latest.kort||0).toFixed(2),'%',(latest.kort||0)-(prev.kort||0),'#60a5fa','kort',true],
+    ['Re-integr.',latest.reIntegratie||0,'',null,'#a855f7','reIntegratie',true],
+    ['Productiviteit',(latest.productiviteit||0).toFixed(1),'%',null,'#10b981','productiviteit',false],
+    ['% Ongetr. LG',(latest.untrainedPct||0),'%',null,'#f59e0b','untrainedPct',true],
+  ].forEach(([lbl,val,unit,delta,color,key,bad])=>krow.appendChild(mkKpi(lbl,val,unit,delta,color,key,bad)));
+
+  // Selected charts
+  const grid=document.getElementById('chart-grid');grid.innerHTML='';
+  const selected=CHART_DEFS.filter(cd=>state.selected.has(cd.id));
+  if(selected.length===0){
+    const em=document.createElement('div');em.className='empty-dash';
+    em.textContent='Geen grafieken geselecteerd — klik op "Grafieken aanpassen" om grafieken te kiezen.';
+    grid.appendChild(em);
+  } else {
+    selected.forEach(cd=>cd.render(data,grid));
+  }
+
+  // Verhaalkader (altijd zichtbaar)
+  const vc=document.createElement('div');vc.className='verhaal-card';
+  const vh=document.createElement('h3');vh.textContent='🎙️ Verhaalkader voor je presentatie';vc.appendChild(vh);
+  const vsu=document.createElement('div');vsu.className='vsub';vsu.textContent='Gebruik deze structuur om je bevindingen te presenteren aan het management van Meridian BV';vc.appendChild(vsu);
+  const vg=document.createElement('div');vg.className='verhaal-grid';
+  [
+    ['1','Wat zien we?','Beschrijf de trend in de kerncijfers. Wanneer begon het verzuim te stijgen? Hoe groot is het probleem nu vergeleken met de benchmark?'],
+    ['2','Wanneer begon het?','Benoem het omslagpunt. Welk jaar? Welk type verzuim veranderde het eerst — kortdurend of langdurend?'],
+    ['3','Wat verklaart het?','Welke variabelen bewegen mee? Wat is een mogelijke oorzaak? Onderscheid symptomen (wat je ziet) van oorzaken (wat het veroorzaakt).'],
+    ['4','Wat kost het?','Vertaal de cijfers naar financiële impact. Gebruik de kostengrafiek om de urgentie te onderbouwen voor het management.'],
+    ['5','Wat adviseren we?','Formuleer een concrete aanbeveling. Wat moet er veranderen, voor wie, en met welk verwacht resultaat?'],
+  ].forEach(([n,t,p])=>{
+    const vs=document.createElement('div');vs.className='verhaal-step';
+    const vn=document.createElement('div');vn.className='vnum';vn.textContent=n;vs.appendChild(vn);
+    const vt=document.createElement('h4');vt.textContent=t;vs.appendChild(vt);
+    const vp=document.createElement('p');vp.textContent=p;vs.appendChild(vp);
+    vg.appendChild(vs);
+  });
+  vc.appendChild(vg);grid.appendChild(vc);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────
+buildCtx('intro-ctx');
+</script>
+</body>
+</html>
