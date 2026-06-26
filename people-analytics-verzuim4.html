@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>People Analytics — Ziekteverzuim Simulatie</title>
+<style>
+:root{
+  --hr-pink:#EC1E63;--hr-pink-dark:#C8164F;--hr-orange:#F2993E;--hr-navy:#1B4F82;--hr-navy-dark:#163E68;
+  --hr-green:#7AB648;--hr-green-dark:#5C8F36;--hr-blue:#5EC2E0;--hr-purple:#7A3F9D;
+  --bg:#F3F4F6;--surface:#FFFFFF;--surface-2:#F7F8FA;--border:#E2E5EA;
+  --text:#23262B;--text-muted:#6B7280;--text-faint:#9AA1AC;--text-disabled:#C7CCD3;
+  --danger:#DC2626;--success:#178A4C;
+  --shadow:0 1px 3px rgba(16,24,40,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-serif;min-height:100vh}
+::-webkit-scrollbar{width:8px;background:#EDEEF0}
+::-webkit-scrollbar-thumb{background:var(--text-disabled);border-radius:4px}
+#app{padding:20px;max-width:1400px;margin:0 auto}
+
+/* ── SHARED ── */
+.btn-primary{padding:11px 22px;background:var(--hr-pink);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;transition:background .15s}
+.btn-primary:hover{background:var(--hr-pink-dark)}
+.btn-primary:disabled{background:var(--border);color:var(--text-disabled);cursor:not-allowed}
+.btn-ghost{padding:8px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;color:var(--text-muted);cursor:pointer;transition:all .15s}
+.btn-ghost:hover{border-color:var(--hr-navy);color:var(--hr-navy)}
+.btn-back-step{padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:7px;font-size:12px;font-weight:700;color:var(--hr-navy);cursor:pointer;transition:all .15s;flex-shrink:0}
+.btn-back-step:hover:not(:disabled){border-color:var(--hr-navy);background:#EAF1F8}
+.btn-back-step:disabled{color:var(--text-disabled);cursor:default}
+.screen-nav{display:flex;align-items:center;gap:10px;margin-top:24px;flex-wrap:wrap}
+.screen-nav .spacer{flex:1}
+.pill-tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:4px 11px;border-radius:12px;margin-bottom:14px}
+.footer-note{font-size:11px;color:var(--text-disabled);text-align:center;margin-top:20px;padding-bottom:10px}
+
+/* ── PROGRESS BAR ── */
+.progress-wrap{display:flex;align-items:center;gap:0;margin-bottom:20px;padding:12px 16px;background:var(--surface);border-radius:10px;border:1px solid var(--border);box-shadow:var(--shadow);flex-wrap:wrap;gap:4px}
+.prog-step{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.prog-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0}
+.prog-lbl{font-size:12px;font-weight:600;white-space:nowrap}
+.prog-sep{width:18px;height:1px;background:var(--border);flex-shrink:0;margin:0 2px}
+.prog-step.done .prog-num{background:var(--hr-green);color:#fff}
+.prog-step.done .prog-lbl{color:var(--text-muted)}
+.prog-step.active .prog-num{background:var(--hr-pink);color:#fff}
+.prog-step.active .prog-lbl{color:var(--text);font-weight:700}
+.prog-step.future .prog-num{background:var(--surface);border:1px solid var(--border);color:var(--text-disabled)}
+.prog-step.future .prog-lbl{color:var(--text-disabled)}
+
+/* ── ANALYTICS MATURITY BAR ── */
+.maturity-bar{display:flex;gap:0;margin-bottom:8px;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.mat-item{padding:8px 14px;flex:1;text-align:center;font-size:11px;font-weight:700;border-right:1px solid var(--border);transition:background .2s}
+.mat-item:last-child{border-right:none}
+.mat-item.mat-done{background:var(--surface-2);color:var(--text-muted)}
+.mat-item.mat-active{background:#EAF1F8;color:var(--hr-navy)}
+.mat-item.mat-future{background:var(--surface);color:var(--text-disabled)}
+.mat-item .mat-sub{display:block;font-size:9.5px;font-weight:400;margin-top:2px;opacity:.8}
+
+/* ── SCREEN 1: BUSINESS VRAAG ── */
+.bv-hero{text-align:center;padding:36px 20px 24px;max-width:720px;margin:0 auto}
+.bv-hero h2{font-size:27px;font-weight:800;margin-bottom:10px;line-height:1.2}
+.bv-hero h2 span{color:var(--hr-pink)}
+.bv-hero p{font-size:14px;color:var(--text-muted);line-height:1.7}
+.bv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;max-width:900px;margin:24px auto}
+.bv-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow)}
+.bv-card h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.bv-card h3 .ic{font-size:14px}
+.bv-card ul{padding-left:0;list-style:none}
+.bv-card li{font-size:13.5px;color:var(--text-muted);line-height:1.8;padding-left:16px;position:relative}
+.bv-card li::before{content:'→';position:absolute;left:0;color:var(--hr-navy);font-size:11px}
+.bv-card.accent{border-color:var(--hr-navy);background:#EAF1F8}
+.bv-card .opdracht-q{font-size:14.5px;color:var(--text);font-weight:600;line-height:1.6;border-left:3px solid var(--hr-navy);padding-left:12px;margin-bottom:12px}
+.bv-learn-item{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:13px;color:var(--text-muted)}
+.bv-learn-item .chk{color:var(--hr-green-dark);font-weight:800;flex-shrink:0;margin-top:1px}
+.bv-koppeling{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.kop-chip{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-size:11px;color:var(--text-muted)}
+
+/* ── SCREEN 2: HYPOTHESE ── */
+.hyp-wrap{max-width:680px;margin:0 auto}
+.hyp-intro{font-size:13.5px;color:var(--text-muted);margin-bottom:20px;line-height:1.7;padding:14px 18px;background:#FFF7EA;border-radius:10px;border-left:3px solid var(--hr-orange)}
+.hyp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px}
+.hyp-card{background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:14px 18px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:12px}
+.hyp-card:hover{border-color:var(--hr-navy)}
+.hyp-card.selected{border-color:var(--hr-navy);background:#EAF1F8}
+.hyp-radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.hyp-card.selected .hyp-radio{border-color:var(--hr-navy);background:var(--hr-navy)}
+.hyp-card.selected .hyp-radio::after{content:'';width:8px;height:8px;border-radius:50%;background:#fff;display:block}
+.hyp-label{font-size:13.5px;font-weight:600;color:var(--text)}
+.hyp-card .hyp-icon{font-size:20px;flex-shrink:0}
+
+/* ── SCREEN 3: ANALYSEBOOM ── */
+.boom-display{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px 16px;margin-bottom:20px;display:flex;flex-direction:column;align-items:center;box-shadow:var(--shadow)}
+.boom-root2{background:var(--hr-pink);color:#fff;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:800;text-align:center}
+.boom-trunk{width:1px;height:18px;background:var(--border)}
+.boom-cats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;width:100%;max-width:1000px}
+.boom-cat-col{display:flex;flex-direction:column;align-items:center;text-align:center}
+.boom-connector{color:var(--text-disabled);font-size:13px;line-height:1.4}
+.boom-cat-box{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:11.5px;font-weight:700;color:var(--hr-navy);width:100%;transition:all .2s}
+.boom-cat-box.hi{border-color:var(--hr-navy);background:#EAF1F8;color:var(--hr-navy-dark)}
+.boom-leaves-row{display:flex;flex-direction:column;gap:4px;width:100%;margin-top:4px}
+.boom-leaf{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:11px;color:var(--text-muted);transition:all .2s}
+.boom-leaf.hi{border-color:var(--hr-pink);background:#FCE8EF;color:var(--hr-pink-dark);font-weight:700}
+.boom-select-panel{margin-bottom:18px}
+.boom-select-panel h3{font-size:14.5px;font-weight:800;margin-bottom:4px}
+.boom-select-sub{font-size:13px;color:var(--text-muted);margin-bottom:14px;line-height:1.6}
+.boom-checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px}
+.boom-check-item{background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .15s}
+.boom-check-item:hover:not(.boom-check-disabled){border-color:var(--hr-navy)}
+.boom-check-item.boom-check-sel{border-color:var(--hr-navy);background:#EAF1F8}
+.boom-check-item.boom-check-disabled{opacity:.4;cursor:not-allowed}
+.boom-check-box{width:16px;height:16px;border-radius:4px;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;transition:all .15s}
+.boom-check-item.boom-check-sel .boom-check-box{background:var(--hr-navy);border-color:var(--hr-navy)}
+.boom-check-lbl{font-size:13px;font-weight:600;color:var(--text)}
+
+/* ── SCREEN 4: PICKER ── */
+.picker-header{display:flex;align-items:center;gap:12px;margin-bottom:6px;flex-wrap:wrap}
+.picker-header h2{font-size:18px;font-weight:800;flex:1}
+.counter-badge{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:6px 16px;font-size:13px;font-weight:700;white-space:nowrap}
+.counter-badge .cnt{color:var(--hr-navy)}
+.counter-badge .cnt.max{color:var(--hr-green-dark)}
+.picker-sub{font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.6}
+.picker-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+.pick-card{background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;transition:all .15s;position:relative;box-shadow:var(--shadow)}
+.pick-card:hover:not(.pick-disabled){border-color:var(--hr-navy)}
+.pick-card.pick-sel{border-color:var(--hr-navy);background:#EAF1F8}
+.pick-card.pick-disabled{opacity:.4;cursor:not-allowed}
+.pick-check{display:none;position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;background:var(--hr-navy);align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff}
+.pick-card.pick-sel .pick-check{display:flex}
+.pick-icon{font-size:22px;margin-bottom:6px}
+.pick-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;line-height:1.3}
+.pick-sub2{font-size:11px;color:var(--text-faint);margin-bottom:5px}
+.pick-desc{font-size:12px;color:var(--text-muted);line-height:1.5}
+.picker-actions{display:flex;align-items:center;gap:12px;justify-content:flex-end}
+.picker-hint{font-size:12px;color:var(--text-faint);flex:1}
+
+/* ── SCREEN 5: DASHBOARD ── */
+.topbar{display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:16px;flex-wrap:wrap}
+.logo{background:linear-gradient(135deg,var(--hr-pink),var(--hr-orange));border-radius:8px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;margin-top:2px}
+.topbar h1{font-size:19px;font-weight:800;letter-spacing:-0.02em;line-height:1.2}
+.topbar h1 span{font-weight:400;color:var(--text-muted);font-size:12.5px;margin-left:6px}
+.org-info{margin-top:6px;display:flex;flex-wrap:wrap;gap:12px}
+.org-chip{font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:4px}
+.org-chip b{color:var(--text);font-weight:600}
+.dash-nav{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;align-items:flex-start}
+.controls{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.controls label{font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em}
+.year-btn{padding:4px 11px;border-radius:6px;cursor:pointer;font-size:12.5px;font-weight:600;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);transition:all .12s}
+.year-btn.on{border-color:var(--hr-navy);background:#EAF1F8;color:var(--hr-navy)}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:16px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 13px;cursor:pointer;transition:border-color .15s;box-shadow:var(--shadow)}
+.kpi:hover{border-color:var(--hr-navy)}
+.kpi.active-kpi{border-color:var(--hr-navy);background:#EAF1F8}
+.kpi-lbl{font-size:10.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:4px}
+.kpi-val{font-size:22px;font-weight:800;line-height:1;font-family:monospace}
+.kpi-val span{font-size:11.5px;font-weight:400;color:var(--text-faint)}
+.kpi-delta{font-size:10.5px;font-weight:600;margin-top:3px}
+.kpi-detail{background:#EAF1F8;border:1px solid #BFD7EA;border-radius:10px;padding:14px 16px;margin-bottom:16px;display:none}
+.kpi-detail.open{display:block}
+.kpi-detail h4{font-size:13.5px;font-weight:700;color:var(--hr-navy);margin-bottom:10px}
+.dashboard-grid{display:grid;gap:12px;grid-template-columns:repeat(3,1fr)}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow)}
+.chart-card.wide{grid-column:span 2}
+.chart-card.full{grid-column:span 3}
+.chart-card h3{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px}
+.chart-card .sub{font-size:11px;color:var(--text-faint);margin-bottom:8px}
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.leg-item{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-muted)}
+.leg-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+svg.chart{width:100%;overflow:visible;display:block}
+.ax{font-size:10px;fill:var(--text-faint);font-family:'Segoe UI',Arial,sans-serif}
+.gl{stroke:#EEF0F3;stroke-width:1}
+.empty-dash{grid-column:span 3;text-align:center;padding:40px;color:var(--text-disabled);font-size:14px}
+
+/* ── AI MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;max-width:640px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 12px 40px rgba(16,24,40,.2)}
+.modal h3{font-size:16px;font-weight:700;margin-bottom:4px}
+.modal .msub{font-size:12px;color:var(--text-faint);margin-bottom:16px}
+.modal-close{float:right;background:transparent;border:none;color:var(--text-muted);font-size:19px;cursor:pointer;margin-top:-2px}
+.modal-close:hover{color:var(--text)}
+.ai-q-grid{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.ai-q-btn{background:#EAF1F8;border:1px solid #BFD7EA;border-radius:8px;padding:10px 14px;text-align:left;color:var(--hr-navy);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+.ai-q-btn:hover{border-color:var(--hr-navy);background:#DCE9F5}
+.ai-response{display:none;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-top:12px}
+.ai-response.open{display:block}
+.ai-response .ai-badge{font-size:11px;font-weight:700;color:var(--hr-navy);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.ai-response p{font-size:13.5px;color:var(--text-muted);line-height:1.7}
+.ai-note{font-size:11.5px;color:var(--text-faint);margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-style:italic}
+
+/* ── BEGRIPPENLIJST ── */
+.glossary-fab{position:fixed;bottom:20px;right:20px;background:var(--hr-navy);border:none;color:#fff;padding:11px 18px;border-radius:24px;font-size:13px;font-weight:700;cursor:pointer;z-index:150;box-shadow:0 4px 14px rgba(16,24,40,.25);transition:all .15s}
+.glossary-fab:hover{background:var(--hr-navy-dark);transform:translateY(-2px)}
+.gloss-search{width:100%;padding:9px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);font-size:13px;margin-bottom:16px;outline:none}
+.gloss-search:focus{border-color:var(--hr-navy)}
+.gloss-search::placeholder{color:var(--text-faint)}
+.gloss-cat{margin-bottom:18px}
+.gloss-cat h4{font-size:11.5px;font-weight:800;color:var(--hr-navy);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.gloss-item{margin-bottom:11px}
+.gloss-term{font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:2px}
+.gloss-def{font-size:13px;color:var(--text-muted);line-height:1.6}
+
+/* ── SCREEN 6: CORRELATIE ── */
+.corr-wrap{max-width:720px;margin:0 auto}
+.corr-intro{font-size:13.5px;color:var(--text-muted);line-height:1.7;margin-bottom:20px}
+.hyp-reflect{background:#FFF7EA;border:1px solid #F5D9A8;border-left:3px solid var(--hr-orange);border-radius:10px;padding:14px 18px;margin-bottom:14px;font-size:13.5px;color:var(--text-muted);line-height:1.6}
+.hyp-reflect strong{color:var(--text);display:block;margin-bottom:4px}
+.corr-items{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.corr-item{background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all .15s}
+.corr-item:hover{border-color:var(--text-faint)}
+.corr-item.selected{border-color:var(--hr-navy);background:#EAF1F8}
+.corr-check{width:18px;height:18px;border-radius:4px;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;transition:all .15s}
+.corr-item.selected .corr-check{background:var(--hr-navy);border-color:var(--hr-navy);color:#fff}
+.corr-lbl{font-size:13.5px;font-weight:600;color:var(--text)}
+.corr-reveal{display:none;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-top:20px}
+.corr-reveal.open{display:block}
+.corr-reveal h3{font-size:16px;font-weight:800;color:var(--text);margin-bottom:14px}
+.corr-factor-result{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;padding:10px 14px;border-radius:8px}
+.corr-factor-result.rood-haring{background:#FDECEC;border:1px solid #F3B9B9}
+.corr-factor-result.relevant{background:#EAF7EC;border:1px solid #BFE3C4}
+.corr-factor-result.onzeker{background:#FEF3E0;border:1px solid #F5D9A8}
+.corr-factor-result.gevolg{background:#EAF1F8;border:1px solid #BFD7EA}
+.corr-factor-result .cfr-badge{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:4px;flex-shrink:0;margin-top:2px;color:#fff}
+.corr-factor-result.rood-haring .cfr-badge{background:var(--danger)}
+.corr-factor-result.relevant .cfr-badge{background:var(--hr-green-dark)}
+.corr-factor-result.onzeker .cfr-badge{background:#C2790A}
+.corr-factor-result.gevolg .cfr-badge{background:var(--hr-navy)}
+.corr-factor-result .cfr-text{font-size:12.5px;color:var(--text-muted);line-height:1.6}
+.corr-factor-result .cfr-name{font-weight:700;color:var(--text);margin-bottom:2px;font-size:13.5px}
+.corr-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-top:16px}
+.corr-box h4{font-size:13.5px;font-weight:700;color:var(--hr-purple);margin-bottom:10px}
+.corr-example{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 0}
+.corr-ex-block{background:var(--surface-2);border-radius:8px;padding:10px 16px;font-size:12.5px;color:var(--text-muted);text-align:center;line-height:1.7;flex:1}
+.corr-ex-eq{font-size:20px;color:var(--text-disabled);flex-shrink:0}
+.corr-ex-block .ce-em{font-size:16px;font-weight:800;color:var(--hr-orange);display:block;margin-bottom:4px}
+.corr-derde{background:#F5F0FA;border:1px solid #E0CFF0;border-radius:8px;padding:12px 16px;font-size:12.5px;color:var(--text-muted);margin-top:12px}
+
+/* ── BUSINESS IMPACT BANNER ── */
+.impact-banner{background:#FDECEC;border:1px solid #F3B9B9;border-radius:12px;padding:14px 18px;margin-bottom:14px}
+.impact-banner-title{font-size:11.5px;font-weight:800;color:var(--danger);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.impact-banner-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.impact-banner-item{background:var(--surface);border-radius:8px;padding:10px 14px;text-align:center}
+.ib-val{font-size:20px;font-weight:800;font-family:monospace;color:var(--danger);display:block;line-height:1}
+.ib-lbl{font-size:11px;color:var(--text-muted);margin-top:4px;display:block}
+
+/* ── SPOREN BANNER ── */
+.sporen-banner{background:#EAF1F8;border:1px solid #BFD7EA;border-radius:10px;padding:10px 16px;margin-bottom:14px;font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sb-lbl{font-weight:700;color:var(--hr-navy);flex-shrink:0}
+.sb-chain{font-weight:600;color:var(--text)}
+.sb-edit{margin-left:auto;font-size:11.5px;padding:4px 10px}
+
+/* ── MATURITY CURRENT LABEL ── */
+.mat-current{font-size:12px;color:var(--text-faint);margin-bottom:14px}
+.mat-current strong{color:var(--hr-navy)}
+
+/* ── HYPOTHESE VS WERKELIJKHEID ── */
+.hypo-compare{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-top:10px;margin-bottom:20px}
+.hc-item{display:flex;align-items:baseline;gap:8px;font-size:13px;color:var(--text-muted);padding:7px 4px;border-bottom:1px solid var(--surface-2)}
+.hc-item:last-child{border-bottom:none}
+.hc-item .hc-icon{font-weight:800;width:16px;flex-shrink:0;text-align:center}
+.hc-item em{color:var(--hr-navy);font-style:normal;font-weight:600}
+.hc-yours{background:#EAF1F8;border-radius:6px;padding:7px 10px;border-bottom:none}
+
+/* ── VERHAAL CHAIN ── */
+.verhaal-chain{display:flex;flex-direction:column;gap:2px}
+.verhaal-chain-item{background:var(--surface);border-radius:8px;padding:12px 16px}
+.verhaal-chain-item .vc-lbl{font-size:10.5px;font-weight:700;color:var(--hr-navy);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.verhaal-chain-item p{font-size:13px;color:var(--text-muted);line-height:1.6;margin:0}
+.verhaal-chain-arrow{text-align:center;color:var(--text-disabled);font-size:13px;padding:1px 0}
+
+/* ── SCREEN 7: BELEID ── */
+.beleid-wrap{max-width:800px;margin:0 auto}
+.beleid-header{text-align:center;margin-bottom:24px}
+.beleid-header h2{font-size:21px;font-weight:800;margin-bottom:6px}
+.beleid-header p{font-size:13.5px;color:var(--text-muted)}
+.briefing-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-bottom:14px;box-shadow:var(--shadow)}
+.briefing-card.inconclusive{border-left:4px solid var(--hr-orange)}
+.briefing-card h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.briefing-card h3 .ic{font-size:14px}
+.briefing-card p{font-size:13.5px;color:var(--text-muted);line-height:1.7;margin-bottom:8px}
+.briefing-card p:last-child{margin-bottom:0}
+.impact-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-top:4px}
+.impact-item{background:var(--surface-2);border-radius:8px;padding:12px 14px;text-align:center}
+.impact-val{font-size:22px;font-weight:800;font-family:monospace;color:var(--danger);display:block;line-height:1}
+.impact-lbl{font-size:11px;color:var(--text-muted);margin-top:4px;display:block}
+.advies-item{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;font-size:13.5px;color:var(--text-muted);line-height:1.6}
+.advies-num{width:22px;height:22px;border-radius:50%;background:#EAF1F8;border:1px solid var(--hr-navy);color:var(--hr-navy);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.kpi-monitor-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.kpi-mon{background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px}
+.kpi-mon::before{content:'📊';font-size:12px}
+.sim-slider{width:100%;margin:14px 0 12px;accent-color:var(--hr-pink);cursor:pointer}
+.sim-readout{display:flex;gap:10px;flex-wrap:wrap}
+.sim-readout-item{background:var(--surface-2);border-radius:8px;padding:10px 14px;flex:1;min-width:140px;text-align:center;font-size:11px;color:var(--text-faint)}
+.sim-readout-lbl{display:block;margin-bottom:4px}
+.sim-readout-val{font-size:17px;font-weight:800;font-family:monospace;color:var(--text)}
+
+/* ── SCREEN 8: BONUS ── */
+.bonus-wrap{max-width:760px;margin:0 auto;text-align:center}
+.bonus-wrap h2{font-size:23px;font-weight:800;margin-bottom:8px}
+.bonus-wrap p{font-size:14.5px;color:var(--text-muted);line-height:1.7;margin-bottom:24px}
+.bonus-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;text-align:left}
+.bonus-card{background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:all .15s;box-shadow:var(--shadow)}
+.bonus-card:hover{border-color:var(--hr-navy);transform:translateY(-2px)}
+.bonus-card.selected{border-color:var(--hr-navy);background:#EAF1F8}
+.bonus-card .bc-icon{font-size:22px;margin-bottom:8px}
+.bonus-card .bc-title{font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:3px}
+.bonus-card .bc-sub{font-size:11.5px;color:var(--text-faint)}
+.bonus-discuss{background:#F5F0FA;border:1px solid #E0CFF0;border-left:3px solid var(--hr-purple);border-radius:10px;padding:16px 20px;margin-top:8px;text-align:left}
+.bonus-discuss h3{font-size:13.5px;font-weight:700;color:var(--hr-purple);margin-bottom:6px}
+.bonus-discuss p{font-size:13.5px;color:var(--text-muted);line-height:1.7}
+
+/* ── VERHAAL KADER (onderaan dashboard) ── */
+.verhaal-card{background:#EAF1F8;border:1px solid #BFD7EA;border-radius:12px;padding:20px;grid-column:span 3;margin-top:4px}
+.verhaal-card h3{font-size:13.5px;font-weight:800;color:var(--hr-navy);margin-bottom:3px}
+.verhaal-card .vsub{font-size:11.5px;color:var(--text-faint);margin-bottom:14px}
+.verhaal-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.verhaal-step{background:var(--surface);border-radius:8px;padding:12px}
+.vnum{width:22px;height:22px;border-radius:50%;background:#EAF1F8;border:1px solid var(--hr-navy);color:var(--hr-navy);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-bottom:8px}
+.verhaal-step h4{font-size:11.5px;font-weight:700;color:var(--text);margin-bottom:4px}
+.verhaal-step p{font-size:11px;color:var(--text-muted);line-height:1.6}
+
+/* ── ORG CONTEXT ── */
+.org-context{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:12.5px;color:var(--text-muted);line-height:1.7;box-shadow:var(--shadow)}
+.org-context strong{color:var(--text);display:block;margin-bottom:6px;font-size:12.5px}
+.ctx-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:3px 20px}
+.ctx-row{display:flex;gap:6px}
+.ctx-lbl{color:var(--text-faint);min-width:148px;flex-shrink:0}
+
+@media(max-width:1100px){.picker-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:820px){
+  .picker-grid{grid-template-columns:repeat(2,1fr)}
+  .dashboard-grid{grid-template-columns:repeat(2,1fr)}
+  .chart-card.wide,.chart-card.full{grid-column:span 2}
+  .verhaal-grid{grid-template-columns:repeat(2,1fr)}
+  .verhaal-card,.empty-dash{grid-column:span 2}
+  .boom-wrap{grid-template-columns:1fr}
+  .bonus-grid{grid-template-columns:repeat(2,1fr)}
+  .hyp-grid{grid-template-columns:1fr}
+}
+@media(max-width:520px){
+  .picker-grid{grid-template-columns:1fr 1fr}
+  .dashboard-grid{grid-template-columns:1fr}
+  .chart-card.wide,.chart-card.full,.verhaal-card,.empty-dash{grid-column:span 1}
+  .verhaal-grid{grid-template-columns:1fr}
+  .bonus-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ══ S1: BUSINESS VRAAG ══ -->
+<div id="screen-business">
+  <div id="prog-business"></div>
+  <div class="bv-hero">
+    <div class="pill-tag" style="background:#FDECEC;color:var(--danger)">🚨 Businessprobleem</div>
+    <h2>Meridian BV heeft een <span>verzuimprobleem</span></h2>
+    <p>Het langdurig verzuim stijgt al drie jaar. Het management wil begrijpen wat er speelt — en wat eraan te doen is. Jij bent de HR-analist die dat uitzoekt.</p>
+  </div>
+
+  <div class="bv-grid">
+    <div class="bv-card">
+      <h3><span class="ic">📉</span> Wat zien we?</h3>
+      <ul>
+        <li>Langdurig verzuim stijgt elk jaar sinds 2021</li>
+        <li>Kosten lopen fors op, jaar na jaar</li>
+        <li>Teams raken structureel onderbezet</li>
+        <li>Productiviteit daalt zichtbaar</li>
+        <li>Re-integratietrajecten nemen toe</li>
+      </ul>
+    </div>
+
+    <div class="bv-card accent">
+      <h3><span class="ic">❓</span> De businessvraag</h3>
+      <div class="opdracht-q">Hoe kunnen we het langdurig verzuim verlagen zonder de werkdruk verder te verhogen?</div>
+      <p style="font-size:12px;color:var(--text-muted)">Jouw taak: analyseer de data van 2020–2024, zoek verbanden, onderscheid oorzaken van symptomen en formuleer een advies voor de directie.</p>
+    </div>
+
+    <div class="bv-card">
+      <h3><span class="ic">🎓</span> Wat leer je hier?</h3>
+      <div class="bv-learn-item"><span class="chk">✔</span><span>Je start bij een businessprobleem — niet bij data</span></div>
+      <div class="bv-learn-item"><span class="chk">✔</span><span>Je werkt met de datagedreven HR-cyclus</span></div>
+      <div class="bv-learn-item"><span class="chk">✔</span><span>Je onderscheidt oorzaken van symptomen</span></div>
+      <div class="bv-learn-item"><span class="chk">✔</span><span>Je leert correlatie ≠ causaliteit herkennen</span></div>
+      <div class="bv-learn-item"><span class="chk">✔</span><span>Je gebruikt AI als hypothesemaker, niet als beslisser</span></div>
+      <div class="bv-koppeling">
+        <span class="kop-chip">Datagedreven HR-cyclus</span>
+        <span class="kop-chip">6W-model</span>
+        <span class="kop-chip">Vraag achter de vraag</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen-nav" style="max-width:900px;margin:0 auto">
+    <span class="spacer"></span>
+    <button class="btn-primary" onclick="goto('hypothese')">Formuleer je hypothese →</button>
+  </div>
+  <p class="footer-note">Data zijn gefingeerd en uitsluitend bedoeld voor leerdoeleinden · Meridian BV is een fictieve organisatie</p>
+</div>
+
+<!-- ══ S2: HYPOTHESE ══ -->
+<div id="screen-hypothese" style="display:none">
+  <div id="prog-hypothese"></div>
+  <div class="hyp-wrap">
+    <div class="pill-tag" style="background:#FFF7EA;color:var(--hr-orange)">🤔 Voordat je de data ziet</div>
+    <h2 style="font-size:20px;font-weight:800;margin-bottom:8px">Wat denk <em>jij</em>?</h2>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:18px">Formuleer eerst je hypothese — zónder data te bekijken. Evidence-based werken begint bij het bewust maken van je aannames.</p>
+    <div class="hyp-intro">
+      <strong style="color:var(--text);display:block;margin-bottom:4px">Vraag:</strong>
+      Wat is volgens jou de <strong style="color:var(--text)">belangrijkste oorzaak</strong> van het stijgende langdurig verzuim bij Meridian BV?
+    </div>
+    <div class="hyp-grid" id="hyp-options"></div>
+    <p style="font-size:11px;color:var(--text-disabled);margin-bottom:16px">Je keuze wordt na de analyse vergeleken met wat de data laten zien.</p>
+    <div class="screen-nav">
+      <span class="spacer"></span>
+      <button class="btn-primary" id="btn-hyp-next" disabled onclick="goto('boom')">Ga naar de analyseboom →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S3: ANALYSEBOOM ══ -->
+<div id="screen-boom" style="display:none">
+  <div id="prog-boom"></div>
+  <div class="pill-tag" style="background:#EAF7EC;color:var(--hr-green-dark)">🌳 Analyseboom</div>
+  <h2 style="font-size:20px;font-weight:800;margin-bottom:6px">Verken de analyseboom</h2>
+  <p style="font-size:13px;color:var(--text-muted);margin-bottom:18px">De businessvraag is: <strong style="color:var(--text)">hoe kunnen we het langdurig verzuim verlagen zonder de werkdruk verder te verhogen?</strong> Onderstaande boom laat zien welke categorieën van factoren hieraan kunnen bijdragen — van werkomstandigheden tot re-integratie. Dit zijn nog geen conclusies, maar mogelijke verklaringsrichtingen.</p>
+  <div class="boom-display" id="boom-display"></div>
+  <div class="boom-select-panel">
+    <h3>Welke factoren wil je onderzoeken?</h3>
+    <p class="boom-select-sub">Je kunt niet alles tegelijk onderzoeken. Kies <strong style="color:var(--text)">maximaal 3 sporen</strong> — de factoren die jij vermoedt het meest bepalend zijn voor het langdurig verzuim. Je keuze bepaalt straks mee welke grafieken relevant voor je zijn.</p>
+    <div class="boom-checks" id="boom-checks"></div>
+  </div>
+  <div class="screen-nav">
+    <span style="font-size:12px;color:var(--text-faint)" id="boom-hint-text"></span>
+    <span class="spacer"></span>
+    <button class="btn-primary" id="btn-boom-next" disabled onclick="goto('picker')">Kies je grafieken →</button>
+  </div>
+</div>
+
+<!-- ══ S4: PICKER ══ -->
+<div id="screen-picker" style="display:none">
+  <div id="prog-picker"></div>
+  <div class="picker-header">
+    <h2>Kies je grafieken</h2>
+    <div class="counter-badge">Gekozen: <span class="cnt" id="sel-count">0</span> van max. 9</div>
+  </div>
+  <p class="picker-sub">Kies maximaal 9 grafieken die jij het meest relevant vindt om het verhaal te vertellen. Denk na: welke data helpt je begrijpen <em>wat</em> er speelt én <em>waarom</em>? Niet alles is even bruikbaar.</p>
+  <div class="picker-grid" id="picker-grid"></div>
+  <div class="picker-actions">
+    <span class="picker-hint" id="picker-hint"></span>
+    <button class="btn-primary" id="btn-confirm" disabled onclick="goto('dashboard')">Bekijk dashboard →</button>
+  </div>
+</div>
+
+<!-- ══ S5: DASHBOARD ══ -->
+<div id="screen-dashboard" style="display:none">
+  <div id="prog-dashboard"></div>
+  <div id="mat-dashboard"></div>
+
+  <div class="topbar">
+    <div class="logo">📊</div>
+    <div>
+      <h1>Ziekteverzuim Dashboard <span>Meridian BV · 2020–2024</span></h1>
+      <div class="org-info">
+        <div class="org-chip">👥 <b>500</b> medewerkers</div>
+        <div class="org-chip">🏭 Sales · Ops · IT · HR · Finance</div>
+        <div class="org-chip">📍 Utrecht · Amsterdam · Eindhoven</div>
+      </div>
+    </div>
+    <div class="dash-nav">
+      <button class="btn-ghost" style="border-color:var(--hr-navy);color:var(--hr-navy)" onclick="openAI()">🤖 Vraag de AI</button>
+      <button class="btn-ghost" onclick="goto('picker')">✎ Grafieken</button>
+      <button class="btn-primary" onclick="goto('correlatie')">Ga naar inzichten →</button>
+    </div>
+  </div>
+
+  <div id="impact-banner"></div>
+  <div id="sporen-banner"></div>
+
+  <div class="org-context" id="dash-ctx">
+    <strong>Meridian BV — organisatiecontext</strong>
+    <div class="ctx-grid" id="dash-ctx-grid"></div>
+  </div>
+
+  <div class="controls">
+    <label>Jaar:</label>
+    <div id="year-btns"></div>
+  </div>
+  <div class="kpi-row" id="kpi-row"></div>
+  <div class="kpi-detail" id="kpi-detail"><h4 id="kpi-detail-title"></h4><div id="kpi-detail-chart"></div></div>
+  <div class="dashboard-grid" id="chart-grid"></div>
+</div>
+
+<!-- ══ S6: CORRELATIE ══ -->
+<div id="screen-correlatie" style="display:none">
+  <div id="prog-correlatie"></div>
+  <div class="corr-wrap">
+    <div class="pill-tag" style="background:#F1EAFB;color:var(--hr-purple)">🔗 Correlatie of causaliteit?</div>
+    <h2 style="font-size:20px;font-weight:800;margin-bottom:10px">Welke factoren vond jij overtuigend?</h2>
+    <p class="corr-intro">Je hebt het dashboard geanalyseerd. Vink aan welke factoren jij overtuigend vond als verklaring voor het stijgende langdurig verzuim.</p>
+    <div class="hyp-reflect" id="hyp-reflect-block"></div>
+    <div class="hypo-compare" id="hyp-compare-block"></div>
+    <div class="corr-items" id="corr-items"></div>
+    <button class="btn-primary" id="btn-corr-submit" onclick="submitCorr()">Bekijk de uitkomst →</button>
+    <div class="corr-reveal" id="corr-reveal"></div>
+    <div class="screen-nav" id="corr-nav" style="display:none">
+      <span class="spacer"></span>
+      <button class="btn-primary" onclick="goto('beleid')">Van inzicht naar beleid →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S7: BELEID ══ -->
+<div id="screen-beleid" style="display:none">
+  <div id="prog-beleid"></div>
+  <div id="mat-beleid"></div>
+  <div class="beleid-wrap">
+    <div class="beleid-header">
+      <div class="pill-tag" style="background:#EAF7EC;color:var(--hr-green-dark)">📄 Directiebriefing</div>
+      <h2>Van inzicht naar beleid</h2>
+      <p>Hieronder vind je een automatisch gegenereerde directiebriefing op basis van jouw analyse. Dit is hoe People Analytics eindigt: niet met een grafiek, maar met een beslissing.</p>
+    </div>
+    <div id="briefing-content"></div>
+    <div class="screen-nav">
+      <span class="spacer"></span>
+      <button class="btn-primary" onclick="goto('bonus')">Afsluiting →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S8: BONUS ══ -->
+<div id="screen-bonus" style="display:none">
+  <div id="prog-bonus"></div>
+  <div class="bonus-wrap">
+    <div class="pill-tag" style="background:#F1EAFB;color:var(--hr-purple)">✨ Transfer</div>
+    <h2>Welke businessvraag zou jij morgen willen onderzoeken?</h2>
+    <p>Je hebt zojuist een volledige People Analytics-cyclus doorlopen. Nu de vertaalslag naar jouw eigen praktijk: welk vraagstuk zou jij morgen willen aanpakken?</p>
+    <div class="bonus-grid" id="bonus-grid"></div>
+    <div class="bonus-discuss">
+      <h3>💬 Discussievraag</h3>
+      <p>Met welk vraagstuk zou jij morgen willen starten bij jouw organisatie — en welke data zou je daarvoor nodig hebben?</p>
+    </div>
+    <div class="screen-nav" style="justify-content:center;margin-top:24px">
+      <button class="btn-primary" onclick="goto('business')">↺ Begin opnieuw met een nieuw scenario</button>
+    </div>
+    <p class="footer-note" style="margin-top:24px">Data zijn gefingeerd en uitsluitend bedoeld voor leerdoeleinden · Meridian BV is een fictieve organisatie</p>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<!-- BEGRIPPENLIJST: vast bereikbaar op elk scherm -->
+<button class="glossary-fab" id="glossary-fab" onclick="openGlossary()">📖 Begrippen</button>
+<div class="modal-overlay" id="glossary-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeGlossary()">✕</button>
+    <h3>📖 Begrippenlijst</h3>
+    <div class="msub">Eén bron van definities — zo weten we zeker dat we het over hetzelfde hebben. Bereikbaar via de knop rechtsonder op elk scherm.</div>
+    <input type="text" id="glossary-search" class="gloss-search" placeholder="Zoek een begrip…" oninput="buildGlossary(this.value)"/>
+    <div id="glossary-body"></div>
+  </div>
+</div>
+
+<!-- AI MODAL -->
+<div class="modal-overlay" id="ai-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeAI()">✕</button>
+    <h3>🤖 AI-analist</h3>
+    <div class="msub">Stel een vraag aan de AI. Let op: de AI geeft hypotheses, geen conclusies.</div>
+    <div class="ai-q-grid" id="ai-questions"></div>
+    <div class="ai-response" id="ai-response">
+      <div class="ai-badge">🤖 AI-hypothese</div>
+      <p id="ai-response-text"></p>
+    </div>
+    <div class="ai-note">De mens interpreteert. AI ondersteunt. Gebruik deze uitkomsten als startpunt voor je eigen redenering — niet als antwoord.</div>
+  </div>
+</div>
+
+<script>
+// ─── RNG ──────────────────────────────────────────────────────────────────
+let _s=42;
+function sr(){_s=(_s*1664525+1013904223)&0xffffffff;return((_s>>>0)/4294967296);}
+function srr(a,b){return a+(b-a)*sr();}
+
+// ─── MONTHS ───────────────────────────────────────────────────────────────
+const ML=['Jan','Feb','Mrt','Apr','Mei','Jun','Jul','Aug','Sep','Okt','Nov','Dec'];
+const MONTHS=[];
+for(let y=2020;y<=2024;y++) for(let m=0;m<12;m++)
+  MONTHS.push({key:`${y}-${m}`,label:`${ML[m]}'${String(y).slice(2)}`,year:y,month:m,idx:MONTHS.length});
+
+// ─── DATA ─────────────────────────────────────────────────────────────────
+// Causale opzet: % ongetrainde leidinggevenden is de stuurvariabele (laag in 2020, piek 2022-2023H1
+// door snelle groei, scherpe daling zodra het trainingsprogramma aanslaat in 2023H2-2024).
+// Langdurig verzuim wordt hier RECHTSTREEKS van afgeleid met een vertraging van 3 maanden —
+// zo is het verband in de grafieken daadwerkelijk navolgbaar, in de juiste richting.
+const UNTRAINED_KEYFRAMES=[[0,18],[12,22],[24,58],[36,78],[42,68],[48,28],[59,10]];
+function untrainedCurveAt(idx){
+  const pts=UNTRAINED_KEYFRAMES;
+  if(idx<=pts[0][0])return pts[0][1];
+  if(idx>=pts[pts.length-1][0])return pts[pts.length-1][1];
+  for(let i=0;i<pts.length-1;i++){
+    const[i0,v0]=pts[i],[i1,v1]=pts[i+1];
+    if(idx>=i0&&idx<=i1)return v0+(v1-v0)*(idx-i0)/(i1-i0);
+  }
+  return pts[pts.length-1][1];
+}
+_s=42;
+const DATA=MONTHS.map(({key,label,year,month,idx})=>{
+  const sea=Math.sin(month/11*Math.PI)*-.15;
+  const untrainedSmooth=untrainedCurveAt(idx);
+  const untrainedPct=Math.max(0,Math.min(100,Math.round(untrainedSmooth+srr(-3,3))));
+  const LAG=3;
+  const langDriver=untrainedCurveAt(Math.max(0,idx-LAG))/100;
+  const lang=Math.max(.4,.9+langDriver*2.8+sea+srr(-.12,.12));
+  const kort=Math.max(1.8,2.8+Math.sin(month/11*Math.PI*1.5)*.5+srr(-.2,.2));
+  const verzuim=+(lang+kort).toFixed(2);
+  const kostenVerzuim=Math.round((lang*500*18+kort*180*18)*(1+srr(-.04,.04)));
+  const productiviteit=Math.max(55,Math.min(96,87-lang*3.2+srr(-1.5,1.5)));
+  const meldFreq=+(kort*.31+srr(-.04,.04)).toFixed(2);
+  const meldDuur=+(7.8+srr(-.9,.9)).toFixed(1);
+  const reIntegratie=Math.round(Math.max(0,lang*2.8+srr(-.4,.4)));
+  const tS={Sales:verzuim*1.32,Ops:verzuim*1.52,IT:verzuim*.66,HR:verzuim*.87,Finance:verzuim*.80};
+  const koffie=Math.round(375+Math.sin(month/5*Math.PI)*38+srr(-18,18));
+  const itTickets=Math.round(118+idx*.38+srr(-14,14));
+  const werkplekTevr=+(72+srr(-4,4)).toFixed(1);
+  const kantoorBez=+(65+Math.sin(month/5*Math.PI)*7+srr(-3,3)).toFixed(1);
+  const parkeer=Math.round(148+srr(-15,15));
+  return{key,label,year,month,idx,
+    verzuim,lang:+lang.toFixed(2),kort:+kort.toFixed(2),
+    untrainedPct,kostenVerzuim,
+    productiviteit:+productiviteit.toFixed(1),
+    meldFreq,meldDuur,reIntegratie,
+    teamSales:+tS.Sales.toFixed(2),teamOps:+tS.Ops.toFixed(2),
+    teamIT:+tS.IT.toFixed(2),teamHR:+tS.HR.toFixed(2),teamFinance:+tS.Finance.toFixed(2),
+    koffie,itTickets,werkplekTevr,kantoorBez,parkeer};
+});
+
+// ─── STATS ────────────────────────────────────────────────────────────────
+function avg(arr){return arr.length?arr.reduce((a,b)=>a+b,0)/arr.length:0;}
+const langBaseline=avg(DATA.filter(d=>d.year===2020).map(d=>d.lang));
+const langPeak=avg(DATA.filter(d=>d.year===2023).map(d=>d.lang));
+const extraFTE=Math.round((langPeak-langBaseline)/100*500*10)/10;
+const costTotal2023=DATA.filter(d=>d.year===2023).reduce((s,d)=>s+d.kostenVerzuim,0);
+const reIntegBaseline=avg(DATA.filter(d=>d.year===2020).map(d=>d.reIntegratie));
+const reIntegPeak=avg(DATA.filter(d=>d.year===2023).map(d=>d.reIntegratie));
+const extraReinteg=Math.max(0,Math.round(reIntegPeak-reIntegBaseline));
+const prodBaseline=avg(DATA.filter(d=>d.year===2020).map(d=>d.productiviteit));
+const prodPeak=avg(DATA.filter(d=>d.year===2023).map(d=>d.productiviteit));
+const prodLossPct=Math.max(0,Math.round((prodBaseline-prodPeak)/prodBaseline*100));
+const langCurrent=avg(DATA.filter(d=>d.year===2024).map(d=>d.lang));
+const costTotal2024=DATA.filter(d=>d.year===2024).reduce((s,d)=>s+d.kostenVerzuim,0);
+const COST_PER_PP_YEAR=500*18*12; // € per procentpunt langdurig verzuim per jaar — rechtstreeks uit de kostenformule
+
+// ─── CENTRALE VERDICT-MAPPING ──────────────────────────────────────────────
+// Eén bron van waarheid voor: hypothese-vergelijking, correlatie-checklist én directiebriefing.
+const SPOOR_VERDICT={
+  werkdruk:{type:'zwak',tekst:'Werkdruk laat in de data geen consistent verband zien met langdurig verzuim — het volgt eerder het seizoenspatroon van kortdurend verzuim.'},
+  teamstabiliteit:{type:'sterk',tekst:'Teamstabiliteit hangt sterk samen met langdurig verzuim: teams met veel wisselingen (vaak gevolg van snelle groei) laten een duidelijk hoger langdurig verzuim zien.'},
+  leiderschap:{type:'sterk',tekst:'Het aandeel ongetrainde leidinggevenden beweegt nagenoeg gelijk op met het langdurig verzuim — in timing én richting. Het sterkste verband in de dataset.'},
+  ervaringlg:{type:'sterk',tekst:'Minder ervaren leidinggevenden signaleren verzuim minder snel en begeleiden minder effectief, wat samenhangt met langere verzuimduur.'},
+  leeftijd:{type:'zwak',tekst:'De leeftijdsopbouw verandert nauwelijks in deze periode en verklaart de stijging niet.'},
+  dienstjaren:{type:'zwak',tekst:'Dienstjaren tonen geen consistent patroon dat de stijging van langdurig verzuim verklaart.'},
+  organisatiegroei:{type:'sterk',tekst:'De snelle groei van de organisatie in 2021–2022 leidde tot veel nieuwe, onervaren leidinggevenden — een directe aanjager van het probleem.'},
+  opleiding:{type:'onzeker',tekst:'Algemene opleiding (niet specifiek leiderschapstraining) laat een wisselend beeld zien — niet overtuigend genoeg als verklaring.'},
+  vitaliteit:{type:'onzeker',tekst:'Vitaliteitsdata ontbreken grotendeels in deze dataset — een blinde vlek, geen bevestigd of ontkracht verband.'},
+  reintegratie:{type:'gevolg',tekst:'Re-integratietrajecten stijgen mee met langdurig verzuim, maar zijn een gevolg — niet de verklaring zelf.'},
+};
+function verdictToCorrType(t){return t==='sterk'?'relevant':t==='gevolg'?'gevolg':'onzeker';}
+const CHART_VERDICT={
+  reintegratie:{type:'gevolg',tekst:'Re-integratietrajecten stijgen mee met langdurig verzuim, maar zijn een gevolg — niet de verklaring zelf.'},
+  productiviteit:{type:'gevolg',tekst:'Productiviteitsverlies is een gevolg van het verzuim, geen verklarende oorzaak.'},
+  ongetraind:{type:'relevant',tekst:'Het aandeel ongetrainde leidinggevenden beweegt nagenoeg gelijk op met het langdurig verzuim — het sterkste verband in de dataset.'},
+  teams:{type:'onzeker',tekst:'De verdeling over afdelingen laat verschillen zien, maar verklaart uit zichzelf niet waarom het verzuim stijgt.'},
+  meldfreq:{type:'onzeker',tekst:'Meldingsfrequentie hangt samen met kortdurend verzuim, niet met de stijging van langdurig verzuim.'},
+  meldduur:{type:'rood-haring',tekst:'De gemiddelde meldingsduur blijft vlak over de hele periode — geen signaal.'},
+  koffie:{type:'rood-haring',tekst:'Koffieverbruik fluctueert seizoensgebonden, maar heeft geen relatie met verzuim.'},
+  ittickets:{type:'rood-haring',tekst:'IT-tickets stijgen licht door groei van de organisatie, niet door verzuim.'},
+  werkplek:{type:'rood-haring',tekst:'Werkplek tevredenheid blijft stabiel — geen verband met de stijging van langdurig verzuim.'},
+  kantoor:{type:'rood-haring',tekst:'Kantoorbezetting volgt een seizoenspatroon dat losstaat van het verzuim.'},
+  parkeer:{type:'rood-haring',tekst:'Parkeerbezetting is vlak over de hele periode — een klassieke rode haring.'},
+};
+const CORR_BADGE={'rood-haring':'Rode haring','relevant':'Sterk verband','onzeker':'Onzeker','gevolg':'Gevolg, geen oorzaak'};
+const HYP_TO_SPOOR={werkdruk:'werkdruk',leiderschap:'leiderschap',teamstabiliteit:'teamstabiliteit',groei:'organisatiegroei',vergrijzing:'leeftijd'};
+function getScenario(){
+  // Strikt beperkt tot de sporen die de deelnemer zelf koos in de analyseboom (stap 3) —
+  // er wordt nooit teruggevallen op "het echte antwoord" als dat niet onderzocht is.
+  // Zo ontdekken groepen die andere sporen kozen dat ze tot een andere conclusie komen.
+  const sporen=[...state.sporen];
+  if(!sporen.length)
+    return{oorzaak:'Geen sporen onderzocht',uitleg:'Je hebt in de analyseboom geen sporen gekozen, dus is er geen onderbouwde verklaring te geven. Ga terug naar stap 3 om sporen te kiezen.',inconclusive:true};
+  const verdicts=sporen.map(id=>({id,lbl:SPOREN.find(s=>s.id===id)?.lbl||id,v:SPOOR_VERDICT[id]||{type:'onzeker',tekst:'Geen duidelijk signaal in de data.'}}));
+  const sterke=verdicts.filter(x=>x.v.type==='sterk');
+  if(sterke.length){
+    const namen=sterke.map(x=>x.lbl).join(' en ');
+    return{oorzaak:namen,uitleg:sterke.map(x=>x.v.tekst).join(' ')};
+  }
+  const namen=verdicts.map(x=>x.lbl).join(', ');
+  return{oorzaak:`Geen overtuigend verband bij ${namen}`,
+    uitleg:'De sporen die je onderzocht, leveren geen sterk verband op met het langdurig verzuim. Dat betekent niet dat er geen verklaring bestaat — alleen dat je die met deze keuzes niet hebt blootgelegd. Vergelijk je uitkomst met een groep die andere sporen onderzocht.',
+    inconclusive:true};
+}
+function buildCorrPool(){
+  const pool=[],seen=new Set();
+  SPOREN.filter(sp=>state.sporen.has(sp.id)).forEach(sp=>{
+    if(seen.has(sp.id))return;seen.add(sp.id);
+    const v=SPOOR_VERDICT[sp.id]||{type:'onzeker',tekst:'Geen duidelijk signaal in de data.'};
+    pool.push({id:sp.id,lbl:sp.lbl,type:verdictToCorrType(v.type),tekst:v.tekst});
+  });
+  Object.keys(CHART_VERDICT).filter(id=>state.selected.has(id)).forEach(id=>{
+    if(seen.has(id))return;seen.add(id);
+    const cd=CHART_DEFS.find(c=>c.id===id),v=CHART_VERDICT[id];
+    pool.push({id,lbl:cd?cd.title:id,type:v.type,tekst:v.tekst});
+  });
+  return pool;
+}
+
+// ─── ORG CONTEXT ──────────────────────────────────────────────────────────
+const CTX_ROWS=[
+  ['Organisatie','Meridian BV, 500 medewerkers, zakelijke dienstverlening'],
+  ['Periode','Januari 2020 t/m december 2024 · maandelijkse meting'],
+  ['Afdelingen','Sales, Operations, IT, HR, Finance · 3 locaties'],
+  ['Leidinggevenden','Aandeel jonge LG (<3 jr. ervaring) is de afgelopen jaren gestegen'],
+  ['Beleid','Verzuimprotocol aanwezig; leiderschapstraining is niet verplicht'],
+  ['Benchmark','CBS landelijk gemiddeld verzuim: 4,0% · langdurend: 1,2%'],
+  ['Kosten','Doorbetalingsverplichting 2 jaar · gemiddeld €450/dag langdurend verzuim'],
+];
+function buildCtx(id){
+  const el=document.getElementById(id);if(!el)return;el.innerHTML='';
+  CTX_ROWS.forEach(([lbl,val])=>{
+    const r=document.createElement('div');r.className='ctx-row';
+    const l=document.createElement('span');l.className='ctx-lbl';l.textContent=lbl+':';
+    const v=document.createElement('span');v.textContent=val;
+    r.appendChild(l);r.appendChild(v);el.appendChild(r);
+  });
+}
+
+// ─── SVG HELPERS ──────────────────────────────────────────────────────────
+function ns(tag,a,ch){
+  const el=document.createElementNS('http://www.w3.org/2000/svg',tag);
+  for(const[k,v]of Object.entries(a||{}))el.setAttribute(k,v);
+  for(const c of(ch||[]))el.appendChild(typeof c==='string'?document.createTextNode(c):c);
+  return el;
+}
+function lineChart(data,series,opts={}){
+  const W=opts.w||440,H=opts.h||130,ml=opts.ml||42,mr=10,mt=8,mb=22;
+  const pw=W-ml-mr,ph=H-mt-mb;
+  const allV=series.flatMap(s=>data.map(d=>d[s.key]).filter(v=>v!=null&&!isNaN(v)));
+  if(!allV.length)return ns('svg',{viewBox:`0 0 ${W} ${H}`,class:'chart'});
+  const lo=opts.min!=null?opts.min:Math.min(...allV)*.93;
+  const hi=opts.max!=null?opts.max:Math.max(...allV)*1.06;
+  const xp=i=>ml+i/(Math.max(data.length-1,1))*pw;
+  const yp=v=>mt+ph-(v-lo)/(hi-lo||1)*ph;
+  const svg=ns('svg',{viewBox:`0 0 ${W} ${H}`,class:'chart'});
+  for(let i=0;i<=4;i++){
+    const v=lo+(hi-lo)*i/4,y=yp(v);
+    svg.appendChild(ns('line',{x1:ml,y1:y,x2:ml+pw,y2:y,class:'gl'}));
+    const lbl=v>=10000?'€'+Math.round(v/1000)+'k':+(v).toFixed(v<10?1:0)+'';
+    svg.appendChild(ns('text',{x:ml-3,y:y+3,class:'ax','text-anchor':'end'},[lbl]));
+  }
+  if(opts.bench!=null){
+    const y=yp(opts.bench);
+    svg.appendChild(ns('line',{x1:ml,y1:y,x2:ml+pw,y2:y,stroke:'#9CA3AF','stroke-width':'1.2','stroke-dasharray':'5 3'}));
+  }
+  const step=Math.ceil(data.length/9);
+  data.forEach((d,i)=>{if(i%step===0)svg.appendChild(ns('text',{x:xp(i),y:H-mb+12,class:'ax','text-anchor':'middle'},[d.label]));});
+  series.forEach(s=>{
+    const col=s.color||'#1B4F82';
+    const vals=data.map(d=>d[s.key]);
+    if(s.fill){
+      const pts=[`${xp(0)},${yp(lo)}`,...vals.map((v,i)=>`${xp(i)},${yp(v??lo)}`)].concat([`${xp(data.length-1)},${yp(lo)}`]);
+      svg.appendChild(ns('polygon',{points:pts.join(' '),fill:col,opacity:'.15'}));
+    }
+    svg.appendChild(ns('polyline',{points:vals.map((v,i)=>`${xp(i)},${yp(v??lo)}`).join(' '),fill:'none',stroke:col,'stroke-width':s.w||1.8,'stroke-dasharray':s.dash||''}));
+  });
+  return svg;
+}
+function barChart(data,keys,colors,opts={}){
+  const W=opts.w||440,H=opts.h||140,ml=opts.ml||42,mr=8,mt=8,mb=22;
+  const pw=W-ml-mr,ph=H-mt-mb;
+  const maxV=Math.max(...data.map(d=>Math.max(...keys.map(k=>d[k]||0))))*1.1;
+  const svg=ns('svg',{viewBox:`0 0 ${W} ${H}`,class:'chart'});
+  for(let i=0;i<=4;i++){
+    const v=maxV*i/4,y=mt+ph-ph*i/4;
+    svg.appendChild(ns('line',{x1:ml,y1:y,x2:ml+pw,y2:y,class:'gl'}));
+    svg.appendChild(ns('text',{x:ml-3,y:y+3,class:'ax','text-anchor':'end'},[+(v).toFixed(v<10?1:0)+'']));
+  }
+  const bW=Math.max(2,pw/data.length*.6/keys.length);
+  data.forEach((d,i)=>{
+    const cx=ml+i/(data.length-.5)*pw;
+    svg.appendChild(ns('text',{x:cx,y:H-mb+12,class:'ax','text-anchor':'middle'},[d.year||d.label||'']));
+    const tot=bW*keys.length;
+    keys.forEach((k,ki)=>{const v=d[k]||0,bh=v/maxV*ph;svg.appendChild(ns('rect',{x:cx-tot/2+ki*bW,y:mt+ph-bh,width:Math.max(1,bW-1),height:Math.max(0,bh),fill:colors[ki],rx:'2'}));});
+  });
+  return svg;
+}
+
+// ─── DOM HELPERS ──────────────────────────────────────────────────────────
+function mkLeg(items){
+  const el=document.createElement('div');el.className='legend';
+  items.forEach(({c,l})=>{
+    const d=document.createElement('div');d.className='leg-dot';d.style.background=c;
+    const w=document.createElement('div');w.className='leg-item';w.appendChild(d);w.appendChild(document.createTextNode(l));
+    el.appendChild(w);
+  });
+  return el;
+}
+function addCard(grid,title,sub,svg,legend,cls){
+  const el=document.createElement('div');el.className='chart-card'+(cls?' '+cls:'');
+  const h=document.createElement('h3');h.textContent=title;el.appendChild(h);
+  if(sub){const s=document.createElement('div');s.className='sub';s.textContent=sub;el.appendChild(s);}
+  el.appendChild(svg);if(legend)el.appendChild(legend);
+  grid.appendChild(el);
+}
+function mkKpi(lbl,val,unit,delta,color,key,bad){
+  const el=document.createElement('div');el.className='kpi';
+  if(key&&typeof KPI_DEFS!=='undefined'&&KPI_DEFS[key])el.title=KPI_DEFS[key];
+  const l=document.createElement('div');l.className='kpi-lbl';l.textContent=lbl;el.appendChild(l);
+  const v=document.createElement('div');v.className='kpi-val';v.style.color=color||'#1B4F82';
+  v.textContent=val;
+  if(unit){const s=document.createElement('span');s.textContent=' '+unit;v.appendChild(s);}
+  el.appendChild(v);
+  if(delta!=null&&!isNaN(delta)&&Math.abs(delta)>.001){
+    const d=document.createElement('div');d.className='kpi-delta';
+    const pos=delta>0;
+    d.textContent=(pos?'▲ +':'▼ ')+Math.abs(delta).toFixed(Math.abs(delta)<10?1:0)+(unit?' '+unit:'');
+    d.style.color=bad?(pos?'#DC2626':'#7AB648'):(pos?'#7AB648':'#DC2626');
+    el.appendChild(d);
+  }
+  if(key) el.addEventListener('click',()=>showKpiDetail(el,lbl,unit,key,color));
+  return el;
+}
+function showKpiDetail(el,lbl,unit,key,color){
+  const det=document.getElementById('kpi-detail');
+  const prev=document.querySelector('.kpi.active-kpi');
+  if(prev&&prev!==el)prev.classList.remove('active-kpi');
+  if(el.classList.contains('active-kpi')){el.classList.remove('active-kpi');det.classList.remove('open');buildMaturity('mat-dashboard',1);return;}
+  el.classList.add('active-kpi');
+  buildMaturity('mat-dashboard',0);
+  document.getElementById('kpi-detail-title').textContent=lbl+(unit?' ('+unit+')':'');
+  const dc=document.getElementById('kpi-detail-chart');dc.innerHTML='';
+  const data=DATA.filter(d=>state.years.includes(d.year));
+  dc.appendChild(lineChart(data,[{key,color:color||'#1B4F82',fill:true,w:2}],{w:820,h:160}));
+  dc.appendChild(mkLeg([{c:color||'#1B4F82',l:lbl}]));
+  det.classList.add('open');
+  det.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+// ─── CHART DEFINITIONS (16) ───────────────────────────────────────────────
+const CHART_DEFS=[
+  {id:'verzuim_totaal',icon:'📊',title:'Totaal verzuim %',sub:'Maandelijks, alle medewerkers',desc:'Het gecombineerde verzuimpercentage. Eerste beeld van de omvang van het probleem.',
+   render(data,grid){addCard(grid,'Totaal verzuim %','Gecombineerd per maand (benchmark 4,0%)',lineChart(data,[{key:'verzuim',color:'#1B4F82',fill:true,w:2}],{min:0,max:8,bench:4}),mkLeg([{c:'#1B4F82',l:'Totaal %'},{c:'#9CA3AF',l:'─ ─ benchmark 4,0%'}]));} },
+  {id:'lang',icon:'🔴',title:'Langdurend verzuim (>6 wk)',sub:'Meldingen langer dan 6 weken',desc:'Langdurig verzuim is kostbaar. Hoe ontwikkelt dit type verzuim zich over de jaren?',
+   render(data,grid){addCard(grid,'Langdurend verzuim (>6 weken)','Percentage medewerkers per maand',lineChart(data,[{key:'lang',color:'#F2993E',fill:true,w:2}],{min:0,max:5}),mkLeg([{c:'#F2993E',l:'Langdurend %'}]));} },
+  {id:'kort',icon:'🟡',title:'Kortdurend verzuim (<6 wk)',sub:'Meldingen korter dan 6 weken',desc:'Kortdurend heeft een ander patroon. Bewegen beide typen gelijk, of niet?',
+   render(data,grid){addCard(grid,'Kortdurend verzuim (<6 weken)','Percentage medewerkers per maand',lineChart(data,[{key:'kort',color:'#5EC2E0',fill:true,w:2}],{min:1,max:5}),mkLeg([{c:'#5EC2E0',l:'Kortdurend %'}]));} },
+  {id:'kosten',icon:'💶',title:'Kosten ziekteverzuim (€)',sub:'Maandelijkse kosten incl. loondoorbetaling',desc:'De financiële impact per maand. Gebruik dit om urgentie te onderbouwen.',
+   render(data,grid){addCard(grid,'Kosten ziekteverzuim per maand','Incl. loondoorbetaling en vervanging (€)',lineChart(data,[{key:'kostenVerzuim',color:'#DC2626',fill:true,w:2}],{}),mkLeg([{c:'#DC2626',l:'Kosten €/mnd'}]));} },
+  {id:'reintegratie',icon:'🔄',title:'Re-integratietrajecten',sub:'Lopende trajecten per maand',desc:'Hoeveel medewerkers zitten in re-integratie? Volgt dit het langdurig verzuim?',
+   render(data,grid){addCard(grid,'Actieve re-integratietrajecten','Aantal lopende trajecten per maand',lineChart(data,[{key:'reIntegratie',color:'#7A3F9D',fill:true,w:2}],{min:0}),mkLeg([{c:'#7A3F9D',l:'Re-integraties'}]));} },
+  {id:'productiviteit',icon:'⚡',title:'Productiviteitsscore teams',sub:'Gemiddeld per maand, schaal 0–100',desc:'Wat is het effect op productiviteit? Beweegt dit omgekeerd aan het verzuim?',
+   render(data,grid){addCard(grid,'Productiviteitsscore (teams)','Gemiddeld per maand, schaal 0–100',lineChart(data,[{key:'productiviteit',color:'#7AB648',fill:true,w:2}],{min:50,max:100}),mkLeg([{c:'#7AB648',l:'Productiviteit %'}]));} },
+  {id:'ongetraind',icon:'🎓',title:'% Ongetrainde leidinggevenden',sub:'LG zonder afgeronde leiderschapstraining',desc:'Welk deel van de LG heeft de training nog niet afgerond? Wat is het patroon in de tijd?',
+   render(data,grid){addCard(grid,'% Ongetrainde leidinggevenden','Aandeel LG zonder afgeronde training',lineChart(data,[{key:'untrainedPct',color:'#EC1E63',fill:true,w:2}],{min:0,max:100}),mkLeg([{c:'#EC1E63',l:'% ongetraind'}]));} },
+  {id:'teams',icon:'🏢',title:'Verzuim per afdeling',sub:'Jaargemiddelde per team',desc:'Welke afdelingen scoren hoger? Zegt de verdeling iets over de context of leidinggevenden?',
+   render(data,grid){
+    const years=[...new Set(data.map(d=>d.year))];
+    const td=years.map(y=>{const yd=data.filter(d=>d.year===y);const avg=k=>+(yd.reduce((s,d)=>s+d[k],0)/yd.length).toFixed(2);return{year:String(y),Sales:avg('teamSales'),Ops:avg('teamOps'),IT:avg('teamIT'),HR:avg('teamHR'),Finance:avg('teamFinance')};});
+    addCard(grid,'Verzuim per afdeling','Jaargemiddelde per team',barChart(td,['Sales','Ops','IT','HR','Finance'],['#1B4F82','#F2993E','#7AB648','#7A3F9D','#EC1E63'],{h:150}),mkLeg([{c:'#1B4F82',l:'Sales'},{c:'#F2993E',l:'Ops'},{c:'#7AB648',l:'IT'},{c:'#7A3F9D',l:'HR'},{c:'#EC1E63',l:'Finance'}]),'wide');
+   }},
+  {id:'lang_vs_kort',icon:'⚖️',title:'Langdurend vs kortdurend',sub:'Twee verzuimtypen naast elkaar',desc:'Bewegen beide typen gelijk, of loopt één type sterk vooruit op het andere?',
+   render(data,grid){
+    const cf=document.createElement('div');cf.className='chart-card full';
+    const h=document.createElement('h3');h.textContent='Langdurend vs kortdurend vergeleken';cf.appendChild(h);
+    const s=document.createElement('div');s.className='sub';s.textContent='Twee verzuimtypen naast elkaar op tijdlijn';cf.appendChild(s);
+    const ov=document.createElement('div');ov.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:12px';
+    ov.appendChild(lineChart(data,[{key:'kort',color:'#5EC2E0',fill:true,w:2}],{h:120,min:1,max:5}));
+    ov.appendChild(lineChart(data,[{key:'lang',color:'#F2993E',fill:true,w:2}],{h:120,min:0,max:5}));
+    cf.appendChild(ov);cf.appendChild(mkLeg([{c:'#5EC2E0',l:'Kortdurend %'},{c:'#F2993E',l:'Langdurend %'}]));grid.appendChild(cf);
+   }},
+  {id:'meldfreq',icon:'📋',title:'Meldingsfrequentie',sub:'Gem. meldingen per medewerker per maand',desc:'Hoe vaak meldt iemand zich ziek? Geeft dit ander inzicht dan het percentage?',
+   render(data,grid){addCard(grid,'Meldingsfrequentie per medewerker','Gemiddeld per maand',lineChart(data,[{key:'meldFreq',color:'#9B6FC9',fill:true,w:2}],{min:0}),mkLeg([{c:'#9B6FC9',l:'Meldingsfrequentie'}]));} },
+  {id:'meldduur',icon:'⏱️',title:'Gemiddelde meldingsduur (dgn)',sub:'Kalenderdagen per verzuimmelding',desc:'Hoe lang duurt een gemiddelde melding? Verraadt dit meer dan het percentage?',
+   render(data,grid){addCard(grid,'Gem. meldingsduur (dgn)','Kalenderdagen per verzuimmelding',lineChart(data,[{key:'meldDuur',color:'#9CA3AF',fill:false,w:1.5,dash:'5 3'}],{min:5,max:12}),mkLeg([{c:'#9CA3AF',l:'Meldingsduur (dgn)'}]));} },
+  {id:'koffie',icon:'☕',title:'Koffieverbruik kantoor',sub:'Maandverbruik in liters, alle locaties',desc:'Totaal koffieverbruik per maand op alle kantoorlocaties van Meridian BV.',
+   render(data,grid){addCard(grid,'Koffieverbruik kantoor (liter)','Maandverbruik over alle locaties',lineChart(data,[{key:'koffie',color:'#92400e',fill:true,w:1.5}],{}),mkLeg([{c:'#92400e',l:'Koffie (L/mnd)'}]));} },
+  {id:'ittickets',icon:'💻',title:'IT-supporttickets',sub:'Ingediende tickets per maand',desc:'Aantal IT-hulpverzoeken dat medewerkers per maand indienen via de helpdesk.',
+   render(data,grid){addCard(grid,'IT-supporttickets','Ingediende tickets per maand',lineChart(data,[{key:'itTickets',color:'#9CA3AF',fill:false,w:1.5,dash:'5 3'}],{}),mkLeg([{c:'#9CA3AF',l:'IT-tickets'}]));} },
+  {id:'werkplek',icon:'🪑',title:'Werkplek tevredenheid',sub:'Score werkplekinrichting, schaal 0–100',desc:'Medewerkerstevredenheid met de fysieke werkplek en kantoorvoorzieningen.',
+   render(data,grid){addCard(grid,'Werkplek tevredenheid','Score 0–100, jaarlijkse meting',lineChart(data,[{key:'werkplekTevr',color:'#9CA3AF',fill:false,w:1.5,dash:'5 3'}],{min:50,max:100}),mkLeg([{c:'#9CA3AF',l:'Werkplek tevr.'}]));} },
+  {id:'kantoor',icon:'🏙️',title:'Kantoorinloop per locatie',sub:'Gem. dagbezetting werkplekken (%)',desc:'Gemiddeld percentage bezette werkplekken op een doordeweekse dag per vestiging.',
+   render(data,grid){addCard(grid,'Kantoorinloop per locatie','% bezette werkplekken, gem. per dag',lineChart(data,[{key:'kantoorBez',color:'#9CA3AF',fill:false,w:1.5,dash:'5 3'}],{min:40,max:85}),mkLeg([{c:'#9CA3AF',l:'Bezettingsgraad %'}]));} },
+  {id:'parkeer',icon:'🚗',title:'Bezette parkeerplekken',sub:'Gem. per dag, alle locaties samen',desc:'Gemiddeld aantal bezette parkeerplaatsen per dag over alle kantoorlocaties.',
+   render(data,grid){addCard(grid,'Bezette parkeerplekken','Gemiddeld per dag, alle locaties',lineChart(data,[{key:'parkeer',color:'#9CA3AF',fill:false,w:1.5,dash:'5 3'}],{}),mkLeg([{c:'#9CA3AF',l:'Parkeerplekken'}]));} },
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────
+const state={
+  screen:'business',
+  hypothese:null,
+  sporen:new Set(),
+  years:[2020,2021,2022,2023,2024],
+  selected:new Set(),
+  corrSelected:new Set()
+};
+const MAX_SEL=9;
+
+// ─── PROGRESS ─────────────────────────────────────────────────────────────
+const PROG=[
+  {lbl:'Businessvraag',screens:['business']},
+  {lbl:'Hypothese',screens:['hypothese']},
+  {lbl:'Analyseboom',screens:['boom','picker']},
+  {lbl:'Data analyseren',screens:['dashboard']},
+  {lbl:'Insights',screens:['correlatie']},
+  {lbl:'Advies',screens:['beleid']},
+  {lbl:'Transfer',screens:['bonus']},
+];
+function buildProgress(containerId,currentScreen){
+  // Eén herbruikbare component: dezelfde terugknop, op dezelfde plek, op elk scherm.
+  const el=document.getElementById(containerId);if(!el)return;
+  const screenOrder=ALL_SCREENS;
+  const curIdx=screenOrder.indexOf(currentScreen);
+  const wrap=document.createElement('div');wrap.className='progress-wrap';
+  const back=document.createElement('button');
+  back.className='btn-back-step';back.textContent='← Vorige stap';
+  back.disabled=curIdx<=0;
+  back.onclick=()=>goto(screenOrder[curIdx-1]);
+  wrap.appendChild(back);
+  const sep0=document.createElement('div');sep0.className='prog-sep';wrap.appendChild(sep0);
+  PROG.forEach((p,i)=>{
+    const stepScreenIdx=Math.min(...p.screens.map(s=>screenOrder.indexOf(s)));
+    let cls='future';
+    if(p.screens.includes(currentScreen))cls='active';
+    else if(stepScreenIdx<curIdx)cls='done';
+    const step=document.createElement('div');step.className='prog-step '+cls;
+    const num=document.createElement('div');num.className='prog-num';
+    num.textContent=cls==='done'?'✓':(i+1);
+    const lbl=document.createElement('div');lbl.className='prog-lbl';lbl.textContent=p.lbl;
+    step.appendChild(num);step.appendChild(lbl);wrap.appendChild(step);
+    if(i<PROG.length-1){const sep=document.createElement('div');sep.className='prog-sep';wrap.appendChild(sep);}
+  });
+  el.innerHTML='';el.appendChild(wrap);
+}
+
+function buildMaturity(containerId,level){
+  const el=document.getElementById(containerId);if(!el)return;
+  const levels=[
+    {lbl:'Descriptive',sub:'Wat is er? (Metrics)',name:'METRICS'},
+    {lbl:'Diagnostic',sub:'Waarom? (Analytics)',name:'ANALYTICS'},
+    {lbl:'Predictive',sub:'Wat gaat er gebeuren?',name:'PREDICTIVE'},
+    {lbl:'Prescriptive',sub:'Wat te doen?',name:'PRESCRIPTIVE'},
+  ];
+  const bar=document.createElement('div');bar.className='maturity-bar';
+  levels.forEach((lv,i)=>{
+    const item=document.createElement('div');
+    item.className='mat-item '+(i<level?'mat-done':i===level?'mat-active':'mat-future');
+    item.textContent=lv.lbl;
+    const sub=document.createElement('span');sub.className='mat-sub';sub.textContent=lv.sub;
+    item.appendChild(sub);bar.appendChild(item);
+  });
+  const label=document.createElement('div');label.className='mat-current';
+  label.innerHTML='Je zit nu op: <strong>'+levels[level].name+'</strong>';
+  el.innerHTML='';el.appendChild(bar);el.appendChild(label);
+}
+
+// ─── NAVIGATION ───────────────────────────────────────────────────────────
+const ALL_SCREENS=['business','hypothese','boom','picker','dashboard','correlatie','beleid','bonus'];
+function goto(sc){
+  ALL_SCREENS.forEach(s=>{
+    document.getElementById('screen-'+s).style.display=s===sc?'':'none';
+  });
+  state.screen=sc;
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(sc==='business') buildProgress('prog-business','business');
+  if(sc==='hypothese') initHypothese();
+  if(sc==='boom') initBoom();
+  if(sc==='picker') initPicker();
+  if(sc==='dashboard') initDashboard();
+  if(sc==='correlatie') initCorrelatie();
+  if(sc==='beleid') initBeleid();
+  if(sc==='bonus') initBonus();
+}
+
+// ─── SCREEN 2: HYPOTHESE ──────────────────────────────────────────────────
+const HYP_OPTIONS=[
+  {id:'werkdruk',icon:'😓',lbl:'Werkdruk'},
+  {id:'leiderschap',icon:'👤',lbl:'Leiderschap'},
+  {id:'teamstabiliteit',icon:'👥',lbl:'Teamstabiliteit'},
+  {id:'groei',icon:'📈',lbl:'Organisatiegroei'},
+  {id:'vergrijzing',icon:'🧓',lbl:'Vergrijzing'},
+  {id:'geenidee',icon:'🤷',lbl:'Geen idee'},
+];
+function initHypothese(){
+  buildProgress('prog-hypothese','hypothese');
+  const grid=document.getElementById('hyp-options');grid.innerHTML='';
+  HYP_OPTIONS.forEach(o=>{
+    const card=document.createElement('div');
+    card.className='hyp-card'+(state.hypothese===o.id?' selected':'');
+    const radio=document.createElement('div');radio.className='hyp-radio';
+    const ic=document.createElement('div');ic.className='hyp-icon';ic.textContent=o.icon;
+    const lbl=document.createElement('div');lbl.className='hyp-label';lbl.textContent=o.lbl;
+    card.appendChild(radio);card.appendChild(ic);card.appendChild(lbl);
+    card.addEventListener('click',()=>{state.hypothese=o.id;initHypothese();});
+    grid.appendChild(card);
+  });
+  document.getElementById('btn-hyp-next').disabled=!state.hypothese;
+}
+
+// ─── SCREEN 3: ANALYSEBOOM ────────────────────────────────────────────────
+const MAX_SPOREN=3;
+const BOOM_TREE=[
+  {id:'cat-werkomstandigheden',icon:'🏗️',lbl:'Werkomstandigheden',leaves:[
+    {id:'werkdruk',lbl:'Werkdruk'},
+    {id:'teamstabiliteit',lbl:'Teamstabiliteit'},
+    {id:'psychveiligheid',lbl:'Psych. veiligheid'},
+  ]},
+  {id:'cat-leiderschap',icon:'👤',lbl:'Leiderschap',leaves:[
+    {id:'begeleiding',lbl:'Begeleiding bij verzuim'},
+    {id:'ervaringlg',lbl:'Ervaring leidinggevende'},
+  ]},
+  {id:'cat-medewerkerskenmerken',icon:'🧑',lbl:'Medewerkerskenmerken',leaves:[
+    {id:'leeftijd',lbl:'Leeftijd'},
+    {id:'dienstjaren',lbl:'Dienstjaren'},
+  ]},
+  {id:'cat-organisatie',icon:'🏢',lbl:'Organisatie',leaves:[
+    {id:'orgveranderingen',lbl:'Organisatieveranderingen'},
+    {id:'groeiteams',lbl:'Groei teams'},
+  ]},
+  {id:'cat-inzetbaarheid',icon:'⚡',lbl:'Inzetbaarheid',leaves:[
+    {id:'opleiding',lbl:'Opleiding'},
+    {id:'vitaliteit',lbl:'Vitaliteit'},
+  ]},
+  {id:'cat-reintegratie',icon:'🔄',lbl:'Re-integratie',leaves:[
+    {id:'doorlooptijd',lbl:'Doorlooptijd trajecten'},
+    {id:'succespercentage',lbl:'Succespercentage'},
+  ]},
+];
+// Volgorde en labels exact zoals in de masterclass — "treeId" koppelt elk spoor aan een boomknoop
+const SPOREN=[
+  {id:'werkdruk',lbl:'Werkdruk',treeId:'werkdruk'},
+  {id:'teamstabiliteit',lbl:'Teamstabiliteit',treeId:'teamstabiliteit'},
+  {id:'leiderschap',lbl:'Leiderschap',treeId:'cat-leiderschap'},
+  {id:'ervaringlg',lbl:'Ervaring leidinggevenden',treeId:'ervaringlg'},
+  {id:'leeftijd',lbl:'Leeftijd',treeId:'leeftijd'},
+  {id:'dienstjaren',lbl:'Dienstjaren',treeId:'dienstjaren'},
+  {id:'organisatiegroei',lbl:'Organisatiegroei',treeId:'groeiteams'},
+  {id:'opleiding',lbl:'Opleiding',treeId:'opleiding'},
+  {id:'vitaliteit',lbl:'Vitaliteit',treeId:'vitaliteit'},
+  {id:'reintegratie',lbl:'Re-integratie',treeId:'cat-reintegratie'},
+];
+function highlightedTreeIds(){
+  const set=new Set();
+  state.sporen.forEach(sid=>{
+    const sp=SPOREN.find(s=>s.id===sid);if(!sp)return;
+    set.add(sp.treeId);
+    BOOM_TREE.forEach(cat=>{if(cat.leaves.some(l=>l.id===sp.treeId))set.add(cat.id);});
+  });
+  return set;
+}
+function renderBoomDisplay(){
+  const hi=highlightedTreeIds();
+  const disp=document.getElementById('boom-display');disp.innerHTML='';
+  const root=document.createElement('div');root.className='boom-root2';root.textContent='⚠️ LANGDURIG VERZUIM';
+  disp.appendChild(root);
+  const trunk=document.createElement('div');trunk.className='boom-trunk';disp.appendChild(trunk);
+  const row=document.createElement('div');row.className='boom-cats-row';
+  BOOM_TREE.forEach(cat=>{
+    const col=document.createElement('div');col.className='boom-cat-col';
+    const c1=document.createElement('div');c1.className='boom-connector';c1.textContent='↓';col.appendChild(c1);
+    const catBox=document.createElement('div');catBox.className='boom-cat-box'+(hi.has(cat.id)?' hi':'');catBox.textContent=cat.icon+' '+cat.lbl;col.appendChild(catBox);
+    const c2=document.createElement('div');c2.className='boom-connector';c2.textContent='↓';col.appendChild(c2);
+    const leavesRow=document.createElement('div');leavesRow.className='boom-leaves-row';
+    cat.leaves.forEach(leaf=>{
+      const lf=document.createElement('div');lf.className='boom-leaf'+(hi.has(leaf.id)?' hi':'');lf.textContent=leaf.lbl;leavesRow.appendChild(lf);
+    });
+    col.appendChild(leavesRow);
+    row.appendChild(col);
+  });
+  disp.appendChild(row);
+}
+function initBoom(){
+  buildProgress('prog-boom','boom');
+  renderBoomDisplay();
+  const checks=document.getElementById('boom-checks');checks.innerHTML='';
+  SPOREN.forEach(sp=>{
+    const sel=state.sporen.has(sp.id);
+    const disabled=!sel&&state.sporen.size>=MAX_SPOREN;
+    const item=document.createElement('div');
+    item.className='boom-check-item'+(sel?' boom-check-sel':'')+(disabled?' boom-check-disabled':'');
+    if(typeof SPOOR_TOOLTIP!=='undefined'&&SPOOR_TOOLTIP[sp.id])item.title=SPOOR_TOOLTIP[sp.id];
+    const box=document.createElement('div');box.className='boom-check-box';box.textContent=sel?'✓':'';
+    const lbl=document.createElement('div');lbl.className='boom-check-lbl';lbl.textContent=sp.lbl;
+    item.appendChild(box);item.appendChild(lbl);
+    item.addEventListener('click',()=>{
+      if(disabled)return;
+      if(state.sporen.has(sp.id)) state.sporen.delete(sp.id);
+      else if(state.sporen.size<MAX_SPOREN) state.sporen.add(sp.id);
+      initBoom();
+    });
+    checks.appendChild(item);
+  });
+  const n=state.sporen.size;
+  document.getElementById('btn-boom-next').disabled=n===0;
+  document.getElementById('boom-hint-text').textContent=n===0?'Kies minstens 1 spoor':n+' van max. '+MAX_SPOREN+' sporen gekozen';
+}
+
+// ─── SCREEN 4: PICKER ─────────────────────────────────────────────────────
+function initPicker(){
+  buildProgress('prog-picker','picker');
+  const grid=document.getElementById('picker-grid');grid.innerHTML='';
+  CHART_DEFS.forEach(cd=>{
+    const sel=state.selected.has(cd.id);
+    const disabled=!sel&&state.selected.size>=MAX_SEL;
+    const card=document.createElement('div');
+    card.className='pick-card'+(sel?' pick-sel':'')+(disabled?' pick-disabled':'');
+    const chk=document.createElement('div');chk.className='pick-check';chk.textContent='✓';card.appendChild(chk);
+    const ic=document.createElement('div');ic.className='pick-icon';ic.textContent=cd.icon;card.appendChild(ic);
+    const t=document.createElement('div');t.className='pick-title';t.textContent=cd.title;card.appendChild(t);
+    const su=document.createElement('div');su.className='pick-sub2';su.textContent=cd.sub;card.appendChild(su);
+    const de=document.createElement('div');de.className='pick-desc';de.textContent=cd.desc;card.appendChild(de);
+    card.addEventListener('click',()=>{
+      if(disabled)return;
+      if(state.selected.has(cd.id)) state.selected.delete(cd.id);
+      else if(state.selected.size<MAX_SEL) state.selected.add(cd.id);
+      initPicker();
+    });
+    grid.appendChild(card);
+  });
+  const n=state.selected.size;
+  const cnt=document.getElementById('sel-count');cnt.textContent=n;cnt.className='cnt'+(n>=MAX_SEL?' max':'');
+  const btn=document.getElementById('btn-confirm');btn.disabled=n===0;
+  btn.textContent=n===0?'Kies minstens 1 grafiek':`Bekijk dashboard (${n} grafiek${n===1?'':'en'}) →`;
+  document.getElementById('picker-hint').textContent=n>=MAX_SEL?'Maximum bereikt — deselecteer een kaart om een andere te kiezen.':'';
+}
+
+// ─── SCREEN 5: DASHBOARD ──────────────────────────────────────────────────
+function initDashboard(){
+  buildProgress('prog-dashboard','dashboard');
+  buildMaturity('mat-dashboard',1); // Diagnostic level
+  buildCtx('dash-ctx-grid');
+  renderImpactBanner();
+  renderSporenBanner();
+  renderDashboard();
+}
+function renderImpactBanner(){
+  const el=document.getElementById('impact-banner');el.innerHTML='';
+  const card=document.createElement('div');card.className='impact-banner';
+  const title=document.createElement('div');title.className='impact-banner-title';title.textContent='💼 BUSINESS IMPACT — structurele situatie 2023 t.o.v. 2020';
+  card.appendChild(title);
+  const grid=document.createElement('div');grid.className='impact-banner-grid';
+  [
+    ['€'+Math.round(costTotal2023).toLocaleString('nl-NL'),'jaarlijkse kosten (2023)'],
+    [extraFTE+' FTE','verloren capaciteit'],
+    ['+'+extraReinteg,'extra re-integraties / mnd'],
+    [prodLossPct+'%','productiviteitsverlies'],
+  ].forEach(([val,lbl])=>{
+    const item=document.createElement('div');item.className='impact-banner-item';
+    item.innerHTML=`<span class="ib-val">${val}</span><span class="ib-lbl">${lbl}</span>`;
+    grid.appendChild(item);
+  });
+  card.appendChild(grid);el.appendChild(card);
+}
+function renderSporenBanner(){
+  const el=document.getElementById('sporen-banner');el.innerHTML='';
+  if(!state.sporen.size)return;
+  const lbls=[...state.sporen].map(id=>SPOREN.find(s=>s.id===id)?.lbl).filter(Boolean);
+  const card=document.createElement('div');card.className='sporen-banner';
+  card.innerHTML=`<span class="sb-lbl">🌳 Je onderzoekt nu:</span><span class="sb-chain">${lbls.join(' → ')} → Langdurig verzuim</span><button class="btn-ghost sb-edit" onclick="goto('boom')">✎ Wijzig sporen</button>`;
+  el.appendChild(card);
+}
+function renderDashboard(){
+  const yb=document.getElementById('year-btns');yb.innerHTML='';
+  [2020,2021,2022,2023,2024].forEach(y=>{
+    const b=document.createElement('button');
+    b.className='year-btn'+(state.years.includes(y)?' on':'');
+    b.textContent=y;
+    b.onclick=()=>{
+      state.years=state.years.includes(y)
+        ?(state.years.length>1?state.years.filter(x=>x!==y):state.years)
+        :[...state.years,y].sort((a,b)=>a-b);
+      renderDashboard();
+    };
+    yb.appendChild(b);
+  });
+  const data=DATA.filter(d=>state.years.includes(d.year));
+  const latest=data[data.length-1]||{};
+  const prev=data.length>13?data[data.length-13]:data[0]||{};
+  const krow=document.getElementById('kpi-row');krow.innerHTML='';
+  document.getElementById('kpi-detail').classList.remove('open');
+  [
+    ['Kosten verzuim','€'+(latest.kostenVerzuim||0).toLocaleString('nl-NL'),'',null,'#DC2626','kostenVerzuim',true],
+    ['Totaal verzuim',(latest.verzuim||0).toFixed(2),'%',(latest.verzuim||0)-(prev.verzuim||0),'#1B4F82','verzuim',true],
+    ['Langdurend',(latest.lang||0).toFixed(2),'%',(latest.lang||0)-(prev.lang||0),'#F2993E','lang',true],
+    ['Kortdurend',(latest.kort||0).toFixed(2),'%',(latest.kort||0)-(prev.kort||0),'#5EC2E0','kort',true],
+    ['Re-integr.',latest.reIntegratie||0,'',null,'#7A3F9D','reIntegratie',true],
+    ['Productiviteit',(latest.productiviteit||0).toFixed(1),'%',null,'#7AB648','productiviteit',false],
+    ['% Ongetr. LG',(latest.untrainedPct||0),'%',null,'#EC1E63','untrainedPct',true],
+  ].forEach(a=>krow.appendChild(mkKpi(...a)));
+  const grid=document.getElementById('chart-grid');grid.innerHTML='';
+  const sel=CHART_DEFS.filter(cd=>state.selected.has(cd.id));
+  if(!sel.length){
+    const em=document.createElement('div');em.className='empty-dash';
+    em.textContent='Geen grafieken geselecteerd — klik op "Grafieken" om grafieken te kiezen.';grid.appendChild(em);
+  } else {
+    sel.forEach(cd=>cd.render(data,grid));
+  }
+  // Verhaalkader — chain businessvraag → inzicht → impact → advies → KPI, zelfde structuur als de masterclass
+  const vc=document.createElement('div');vc.className='verhaal-card';
+  const vh=document.createElement('h3');vh.textContent='🎙️ Verhaalkader voor je presentatie';vc.appendChild(vh);
+  const vsu=document.createElement('div');vsu.className='vsub';vsu.textContent='Dezelfde structuur als de masterclass — vul \'m aan met jouw eigen woorden voor de directie · klik daarna op "Ga naar inzichten →"';vc.appendChild(vsu);
+  const scenario=getScenario();
+  const sporenLbls2=[...state.sporen].map(id=>SPOREN.find(s=>s.id===id)?.lbl).filter(Boolean);
+  const chain=document.createElement('div');chain.className='verhaal-chain';
+  [
+    ['Businessvraag','Hoe verlagen we langdurig verzuim zonder de werkdruk verder te verhogen?'],
+    ['Inzicht',sporenLbls2.length?`Verzuim hangt samen met: ${sporenLbls2.join(', ')}.`:'Verzuim stijgt structureel sinds 2021 — vooral het langdurige deel.'],
+    ['Businessimpact',`€${Math.round(costTotal2023).toLocaleString('nl-NL')} aan kosten in 2023, ${extraFTE} FTE verloren capaciteit, ${prodLossPct}% productiviteitsverlies.`],
+    ['Advies',`Pak ${scenario.oorzaak.toLowerCase()} aan. ${scenario.uitleg}`],
+    ['KPI om te monitoren',sporenLbls2.length?`Houd vooral bij: ${sporenLbls2[0]} en het langdurig verzuimpercentage per team.`:'Houd het langdurig verzuimpercentage per team in de gaten.'],
+  ].forEach(([lbl,txt],i,arr)=>{
+    const item=document.createElement('div');item.className='verhaal-chain-item';
+    item.innerHTML=`<div class="vc-lbl">${lbl}</div><p>${txt}</p>`;
+    chain.appendChild(item);
+    if(i<arr.length-1){const arrow=document.createElement('div');arrow.className='verhaal-chain-arrow';arrow.textContent='↓';chain.appendChild(arrow);}
+  });
+  vc.appendChild(chain);grid.appendChild(vc);
+}
+
+// ─── AI MODAL ─────────────────────────────────────────────────────────────
+const AI_QA=[
+  {q:'Wat valt op?',a:'Het langdurig verzuim stijgt opvallend vanaf 2021, terwijl het kortdurend verzuim relatief stabiel blijft. Dat suggereert dat de oorzaak niet algemeen van aard is — iets structureels is veranderd. Het loont om te kijken welke organisatieveranderingen in die periode plaatsvonden.'},
+  {q:'Welke grafiek zou jij bekijken?',a:'Ik zou beginnen met de vergelijking van langdurend versus kortdurend verzuim. Als beide stijgen, zoek ik een algemene factor. Als alleen langdurend stijgt, zoek ik naar structurele verklaringen — leiderschap, teamdynamiek of organisatieveranderingen.'},
+  {q:'Welke data mis ik?',a:'Je hebt nu kwantitatieve verzuimdata, maar mist mogelijk: exit-interviews, medewerkerstevredenheidsscores per team, en gegevens over leiderschapservaring per afdeling. Die combinatie zou een sterker verklarend beeld geven.'},
+  {q:'Welke hypothese zou jij testen?',a:'"Teams met leidinggevenden die de leiderschapstraining niet hebben afgerond, laten een hoger langdurig verzuim zien." Dat is specifiek, falsifieerbaar, en sluit aan op de trend die de data suggereert.'},
+  {q:'Welke analyse zou een People Analytics-team nu uitvoeren?',a:'Waarschijnlijk een multivariate analyse: het effect van leiderschapservaring op verzuimduur, gecontroleerd voor afdeling en teamgrootte. Ook zouden ze willen testen of het verband causaal is door teams te vergelijken vóór en na het invoeren van leiderschapstraining.'},
+  {q:'Welke interventie zou je onderzoeken?',a:'Een gerichte pilot: een verplicht leiderschapsprogramma voor nieuwe leidinggevenden in de twee afdelingen met het hoogste verzuim. Meet vervolgens of het langdurig verzuim daar sneller daalt dan in een controlegroep zonder programma.'},
+];
+function openAI(){document.getElementById('ai-modal').classList.add('open');document.getElementById('ai-response').classList.remove('open');buildMaturity('mat-dashboard',2);}
+function closeAI(){document.getElementById('ai-modal').classList.remove('open');buildMaturity('mat-dashboard',1);}
+document.getElementById('ai-modal').addEventListener('click',e=>{if(e.target===document.getElementById('ai-modal'))closeAI();});
+function buildAI(){
+  const grid=document.getElementById('ai-questions');grid.innerHTML='';
+  AI_QA.forEach(qa=>{
+    const btn=document.createElement('button');btn.className='ai-q-btn';btn.textContent='💬 '+qa.q;
+    btn.onclick=()=>{
+      document.getElementById('ai-response-text').textContent=qa.a;
+      document.getElementById('ai-response').classList.add('open');
+    };
+    grid.appendChild(btn);
+  });
+}
+
+// ─── SCREEN 6: CORRELATIE ─────────────────────────────────────────────────
+function buildHypCompare(){
+  // Toont uitsluitend verdicts voor sporen die de deelnemer zelf onderzocht (state.sporen).
+  // Als de oorspronkelijke hypothese niet onderzocht is, zeggen we dat expliciet —
+  // we bevestigen of ontkrachten nooit iets dat niet gemeten is.
+  const el=document.getElementById('hyp-compare-block');el.innerHTML='';
+  const title=document.createElement('div');
+  title.style.cssText='font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px';
+  title.textContent='Wat blijkt uit de data — voor de sporen die je onderzocht';
+  el.appendChild(title);
+  const hypLbl=HYP_OPTIONS.find(o=>o.id===state.hypothese)?.lbl;
+  const hypSporId=HYP_TO_SPOOR[state.hypothese];
+  if(!state.hypothese||state.hypothese==='geenidee'){
+    const p=document.createElement('p');p.style.cssText='font-size:12px;color:var(--text-faint);margin-bottom:8px';
+    p.textContent='Je koos vooraf geen duidelijke hypothese — dat is ook een prima startpunt.';
+    el.appendChild(p);
+  } else if(!hypSporId||!state.sporen.has(hypSporId)){
+    const p=document.createElement('p');p.style.cssText='font-size:12px;color:var(--text-muted);margin-bottom:8px';
+    p.innerHTML=`Je hypothese was <strong>${hypLbl}</strong>, maar dat spoor heb je niet onderzocht in de analyseboom (stap 3). We kunnen dus niet zeggen of die klopt — alleen voor de sporen die je wél koos, weten we wat de data laten zien:`;
+    el.appendChild(p);
+  }
+  if(!state.sporen.size){
+    const p=document.createElement('p');p.style.cssText='font-size:12px;color:var(--text-faint)';
+    p.textContent='Je hebt geen sporen onderzocht — ga naar stap 3 om dit aan te vullen.';
+    el.appendChild(p);
+    return;
+  }
+  [...state.sporen].forEach(sporId=>{
+    const v=SPOOR_VERDICT[sporId]||{type:'onzeker'};
+    const lbl=SPOREN.find(s=>s.id===sporId)?.lbl||sporId;
+    const isYourHyp=hypSporId===sporId;
+    const sterk=v.type==='sterk';
+    const row=document.createElement('div');row.className='hc-item'+(isYourHyp?' hc-yours':'');
+    row.innerHTML=`<span class="hc-icon">${sterk?'✓':'✗'}</span><span>${lbl} toont ${sterk?'een sterk':'slechts een zwak'} verband${isYourHyp?' <em>(jouw hypothese)</em>':''}</span>`;
+    el.appendChild(row);
+  });
+}
+function initCorrelatie(){
+  buildProgress('prog-correlatie','correlatie');
+  // Hypothese + sporen reflectie
+  const rb=document.getElementById('hyp-reflect-block');
+  const hypLbl=HYP_OPTIONS.find(o=>o.id===state.hypothese)?.lbl||'(geen keuze gemaakt)';
+  const sporenLbls=[...state.sporen].map(id=>SPOREN.find(s=>s.id===id)?.lbl).filter(Boolean);
+  const sporenTxt=sporenLbls.length?sporenLbls.join(', '):'(geen sporen gekozen)';
+  rb.innerHTML=`<strong>Jouw hypothese vooraf:</strong>Je koos voor <em style="color:var(--text)">${state.hypothese?hypLbl+' '+(HYP_OPTIONS.find(o=>o.id===state.hypothese)?.icon||''):'—'}</em>.<br/><strong style="display:block;margin-top:8px">Jouw gekozen sporen in de analyseboom:</strong>${sporenTxt}.`;
+  buildHypCompare();
+  // Correlatie items — exact gelijk aan de sporen die je koos én de grafieken die je bekeken hebt
+  const list=document.getElementById('corr-items');list.innerHTML='';
+  const pool=buildCorrPool();
+  [...state.corrSelected].forEach(id=>{if(!pool.some(p=>p.id===id))state.corrSelected.delete(id);});
+  const submitBtn=document.getElementById('btn-corr-submit');
+  if(!pool.length){
+    list.innerHTML='<p style="font-size:12px;color:var(--text-faint)">Je hebt nog geen sporen (stap 3) of grafieken (stap 4) gekozen om hier te checken. Ga terug en kies er minstens één.</p>';
+    submitBtn.style.display='none';
+    return;
+  }
+  submitBtn.style.display='';
+  pool.forEach(f=>{
+    const item=document.createElement('div');
+    item.className='corr-item'+(state.corrSelected.has(f.id)?' selected':'');
+    const chk=document.createElement('div');chk.className='corr-check';chk.textContent=state.corrSelected.has(f.id)?'✓':'';
+    const lbl=document.createElement('div');lbl.className='corr-lbl';lbl.textContent=f.lbl;
+    item.appendChild(chk);item.appendChild(lbl);
+    item.addEventListener('click',()=>{
+      if(state.corrSelected.has(f.id)) state.corrSelected.delete(f.id);
+      else state.corrSelected.add(f.id);
+      initCorrelatie();
+    });
+    list.appendChild(item);
+  });
+}
+function submitCorr(){
+  const pool=buildCorrPool();
+  const reveal=document.getElementById('corr-reveal');reveal.innerHTML='';reveal.classList.add('open');
+  const h=document.createElement('h3');h.textContent='Uitkomst';reveal.appendChild(h);
+  pool.forEach(f=>{
+    const chosen=state.corrSelected.has(f.id);
+    const row=document.createElement('div');row.className='corr-factor-result '+f.type;
+    const badge=document.createElement('div');badge.className='cfr-badge';badge.textContent=CORR_BADGE[f.type]||f.type;
+    const txt=document.createElement('div');
+    const name=document.createElement('div');name.className='cfr-name';name.textContent=(chosen?'✓ ':'○ ')+f.lbl;
+    const desc=document.createElement('div');desc.className='cfr-text';desc.textContent=f.tekst;
+    txt.appendChild(name);txt.appendChild(desc);
+    row.appendChild(badge);row.appendChild(txt);reveal.appendChild(row);
+  });
+  // Correlatie ≠ causaliteit les
+  const box=document.createElement('div');box.className='corr-box';
+  const bh=document.createElement('h4');bh.textContent='Waarom correlatie ≠ causaliteit';box.appendChild(bh);
+  const bp=document.createElement('p');bp.style.cssText='font-size:12px;color:var(--text-muted);margin-bottom:10px';bp.textContent='Twee variabelen die tegelijk bewegen, hoeven niet oorzaak en gevolg te zijn. Een klassiek voorbeeld:';box.appendChild(bp);
+  box.innerHTML+=`
+    <div class="corr-example">
+      <div class="corr-ex-block"><span class="ce-em">🍦</span>Meer ijsverkoop<br/>in de zomer</div>
+      <div class="corr-ex-eq">=</div>
+      <div class="corr-ex-block"><span class="ce-em">🏊</span>Meer verdrinkingen<br/>in de zomer</div>
+    </div>
+    <div class="corr-derde">
+      <strong style="color:var(--text);display:block;margin-bottom:4px">Derde factor: 🌞 Zomerweer</strong>
+      Zomer zorgt voor zowel meer ijsverkoop als meer zwemmen (→ meer verdrinkingen). IJs <em>veroorzaakt</em> geen verdrinkingen. In People Analytics geldt hetzelfde: zoek altijd naar de onderliggende derde factor.
+    </div>`;
+  reveal.appendChild(box);
+  document.getElementById('btn-corr-submit').style.display='none';
+  document.getElementById('corr-nav').style.display='flex';
+}
+
+// ─── SCREEN 7: BELEID ─────────────────────────────────────────────────────
+function initBeleid(){
+  buildProgress('prog-beleid','beleid');
+  buildMaturity('mat-beleid',3); // Prescriptive level
+  const cont=document.getElementById('briefing-content');cont.innerHTML='';
+  const fmt=n=>Math.round(n).toLocaleString('nl-NL');
+  const scenario=getScenario();
+  const sporenLbls=[...state.sporen].map(id=>SPOREN.find(s=>s.id===id)?.lbl).filter(Boolean);
+  [
+    {icon:'📉',title:'Wat zien we?',html:`<p>Het langdurig verzuim bij Meridian BV is gestegen van gemiddeld <strong style="color:var(--text)">${langBaseline.toFixed(1)}%</strong> in 2020 naar <strong style="color:var(--danger)">${langPeak.toFixed(1)}%</strong> in 2023 — een stijging van ${Math.round((langPeak-langBaseline)*100)/100} procentpunt. Het kortdurend verzuim is in dezelfde periode stabiel gebleven, wat aangeeft dat de oorzaak structureel van aard is.</p>`},
+    {icon:scenario.inconclusive?'❓':'🔍',title:'Waarschijnlijkste verklaring',cls:scenario.inconclusive?'inconclusive':'',html:`<p><strong style="color:var(--text)">${scenario.oorzaak}.</strong> ${scenario.uitleg}</p>${sporenLbls.length?`<p style="font-size:11px;color:var(--text-faint)">Gebaseerd op jouw onderzochte sporen: ${sporenLbls.join(', ')}.</p>`:''}`},
+    {icon:'💶',title:'Businessimpact',html:`<div class="impact-grid">
+      <div class="impact-item"><span class="impact-val">${extraFTE}</span><span class="impact-lbl">Extra FTE verloren capaciteit</span></div>
+      <div class="impact-item"><span class="impact-val">€${fmt(costTotal2023)}</span><span class="impact-lbl">Totale kosten 2023</span></div>
+      <div class="impact-item"><span class="impact-val">${Math.round((langPeak/langBaseline-1)*100)}%</span><span class="impact-lbl">Stijging t.o.v. baseline 2020</span></div>
+    </div>`},
+    {icon:'✅',title:'Advies',html:`
+      <div class="advies-item"><div class="advies-num">1</div><div>Start een <strong style="color:var(--text)">verplicht leiderschapsprogramma</strong> voor alle leidinggevenden, met focus op verzuimbegeleiding, vroegsignalering en teamgesprekken bij langdurige uitval.</div></div>
+      <div class="advies-item"><div class="advies-num">2</div><div>Prioriteer de afdelingen <strong style="color:var(--text)">Sales en Operations</strong>: hoogste verzuim, hoogste aandeel ongetrainde LG.</div></div>
+      <div class="advies-item"><div class="advies-num">3</div><div>Overweeg <strong style="color:var(--text)">coaching on the job</strong> voor nieuwe leidinggevenden (<3 jr.) naast formele training.</div></div>`},
+    {icon:'🧮',title:'Kostensimulator — wat als het verzuim verandert?',html:`
+      <p>Huidige situatie (2024): langdurig verzuim gemiddeld <strong style="color:var(--text)">${langCurrent.toFixed(1)}%</strong>, jaarlijkse kosten <strong style="color:var(--text)">€${fmt(costTotal2024)}</strong>. Schuif om te zien wat een verandering van 1 of 2 procentpunt betekent.</p>
+      <input type="range" id="sim-slider" class="sim-slider" min="-2" max="2" step="0.1" value="0" oninput="updateSimulator(this.value)"/>
+      <div class="sim-readout">
+        <div class="sim-readout-item"><span class="sim-readout-lbl">Verandering</span><span class="sim-readout-val" id="sim-delta-lbl">±0,0</span> procentpunt</div>
+        <div class="sim-readout-item"><span class="sim-readout-lbl">Nieuw verzuim%</span><span class="sim-readout-val" id="sim-new-lang">${langCurrent.toFixed(1)}</span>%</div>
+        <div class="sim-readout-item"><span class="sim-readout-lbl">Kostenverschil/jaar</span><span class="sim-readout-val" id="sim-cost-diff">€0</span></div>
+      </div>
+      <p style="font-size:11px;color:var(--text-faint);margin-top:8px">Gebaseerd op €${(COST_PER_PP_YEAR).toLocaleString('nl-NL')} kosten per procentpunt langdurig verzuim per jaar — direct afgeleid uit de kostengrafiek die je in het dashboard zag.</p>`},
+    {icon:'📊',title:'Monitor de volgende KPI\'s',html:`<div class="kpi-monitor-list">
+      <div class="kpi-mon">Langdurig verzuim %</div>
+      <div class="kpi-mon">Re-integratieduur</div>
+      <div class="kpi-mon">% ongetrainde LG</div>
+      <div class="kpi-mon">Verzuim per afdeling</div>
+      <div class="kpi-mon">Productiviteitsscore</div>
+    </div>`},
+  ].forEach(({icon,title,html,cls})=>{
+    const card=document.createElement('div');card.className='briefing-card'+(cls?' '+cls:'');
+    const h=document.createElement('h3');h.innerHTML=`<span class="ic">${icon}</span>${title}`;card.appendChild(h);
+    card.innerHTML+=html;cont.appendChild(card);
+  });
+  updateSimulator(0);
+}
+function updateSimulator(deltaStr){
+  const delta=parseFloat(deltaStr);
+  const dl=document.getElementById('sim-delta-lbl');if(!dl)return;
+  dl.textContent=(delta>0?'+':delta<0?'−':'±')+Math.abs(delta).toFixed(1);
+  const newLang=Math.max(0,langCurrent+delta);
+  document.getElementById('sim-new-lang').textContent=newLang.toFixed(1);
+  const costDiff=delta*COST_PER_PP_YEAR;
+  const diffEl=document.getElementById('sim-cost-diff');
+  diffEl.textContent=(costDiff>0?'+':costDiff<0?'−':'')+'€'+Math.abs(Math.round(costDiff)).toLocaleString('nl-NL');
+  diffEl.style.color=costDiff>0?'var(--danger)':costDiff<0?'var(--success)':'var(--text)';
+}
+
+// ─── SCREEN 8: BONUS ──────────────────────────────────────────────────────
+const BONUS_OPTIES=[
+  {icon:'💻',title:'Verloop software engineers',sub:'Waarom vertrekken techtalenten?'},
+  {icon:'🤖',title:'AI-adoptie',sub:'Wie omarmt AI — en wie niet?'},
+  {icon:'🔄',title:'Interne mobiliteit',sub:'Hoe bevorderen we doorstroom?'},
+  {icon:'🏭',title:'Verzuim fulfilment',sub:'Wat verklaart het verschil per locatie?'},
+  {icon:'👤',title:'Leiderschap',sub:'Welke LG-stijl werkt het best?'},
+  {icon:'📊',title:'Teamperformance',sub:'Wat maakt het verschil tussen teams?'},
+];
+function initBonus(){
+  buildProgress('prog-bonus','bonus');
+  const grid=document.getElementById('bonus-grid');grid.innerHTML='';
+  BONUS_OPTIES.forEach(o=>{
+    const card=document.createElement('div');card.className='bonus-card';
+    card.innerHTML=`<div class="bc-icon">${o.icon}</div><div class="bc-title">${o.title}</div><div class="bc-sub">${o.sub}</div>`;
+    card.addEventListener('click',()=>{
+      document.querySelectorAll('.bonus-card').forEach(c=>c.classList.remove('selected'));
+      card.classList.add('selected');
+    });
+    grid.appendChild(card);
+  });
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────
+buildAI();
+buildProgress('prog-business','business');
+
+// ─── BEGRIPPENLIJST ─────────────────────────────────────────────────────────
+// Eén centrale bron voor definities — getoond op elk scherm, en als tooltip bij KPI's en sporen.
+const GLOSSARY=[
+  {cat:'Verzuim-cijfers (Metrics)',items:[
+    {term:'Verzuim % (totaal)',def:'Het percentage medewerkers dat in een bepaalde maand ziek gemeld is — kortdurend + langdurend samen.'},
+    {term:'Langdurend verzuim (>6 weken)',def:'Verzuimmeldingen die langer dan 6 weken duren. Vaak gekoppeld aan structurele problematiek; valt onder de Wet verbetering poortwachter.'},
+    {term:'Kortdurend verzuim (<6 weken)',def:'Verzuimmeldingen korter dan 6 weken — vaak griep, verkoudheid of kleine klachten. Volgt meestal een seizoenspatroon.'},
+    {term:'Meldingsfrequentie',def:'Het gemiddeld aantal keer dat een medewerker zich per maand ziek meldt — een maat voor gedrag, niet voor duur.'},
+    {term:'Meldingsduur',def:'Het gemiddeld aantal kalenderdagen per verzuimmelding.'},
+    {term:'Re-integratietraject',def:'Een begeleidingstraject voor een medewerker die na langdurig verzuim weer terug naar werk wordt geleid.'},
+    {term:'Productiviteitsscore',def:'Een teamscore (0–100) die aangeeft hoe goed een team zijn werk uitvoert — een gevolg-indicator, geen oorzaak.'},
+    {term:'% Ongetrainde leidinggevenden',def:'Het aandeel leidinggevenden dat de (niet-verplichte) leiderschapstraining nog niet heeft afgerond.'},
+  ]},
+  {cat:'Business impact',items:[
+    {term:'FTE (verloren capaciteit)',def:'Voltijdsequivalent: het aantal volledige functies dat door verzuim niet wordt ingevuld.'},
+    {term:'Kosten ziekteverzuim',def:'Loondoorbetaling + vervangingskosten per maand, opgeteld over alle verzuimende medewerkers.'},
+    {term:'Benchmark (CBS)',def:'Het landelijk gemiddelde verzuimpercentage zoals gepubliceerd door het CBS — 4,0% totaal, 1,2% langdurend.'},
+  ]},
+  {cat:'Analyseboom & onderzoekssporen',items:[
+    {term:'Analyseboom',def:'Een visuele structuur die een businessvraag opsplitst in categorieën van mogelijke oorzaken en hun onderliggende factoren.'},
+    {term:'Spoor',def:'Een factor uit de analyseboom die je bewust kiest om te onderzoeken — maximaal 3 per analyse.'},
+    {term:'Werkdruk',def:'De ervaren taakbelasting van medewerkers.'},
+    {term:'Teamstabiliteit',def:'De mate waarin een team stabiel blijft qua samenstelling (weinig wisselingen).'},
+    {term:'Leiderschap',def:'De kwaliteit en ervaring van leidinggevenden, met name in verzuimbegeleiding.'},
+    {term:'Ervaring leidinggevenden',def:'Het aantal jaren ervaring dat een leidinggevende heeft in de rol.'},
+    {term:'Organisatiegroei',def:'De snelheid waarmee een organisatie in omvang toeneemt — vaak gepaard met veel nieuwe, onervaren leidinggevenden.'},
+    {term:'Opleiding',def:'Algemene scholing van medewerkers of leidinggevenden, los van specifieke leiderschapstraining.'},
+    {term:'Vitaliteit',def:'De fysieke en mentale gezondheid van medewerkers.'},
+  ]},
+  {cat:'Methodiek',items:[
+    {term:'Hypothese',def:'Een vooraf geformuleerde aanname over de oorzaak van een probleem, vóórdat je de data hebt gezien.'},
+    {term:'Evidence Based Werken',def:'Beslissingen baseren op data en bewijs in plaats van op aannames of onderbuikgevoel.'},
+    {term:'Correlatie',def:'Twee variabelen die samen bewegen (tegelijk stijgen/dalen) — zegt niets over oorzaak en gevolg.'},
+    {term:'Causaliteit',def:'Eén variabele veroorzaakt daadwerkelijk de verandering in een andere variabele.'},
+    {term:'Rode haring',def:'Een variabele die toevallig of schijnbaar samenhangt met het probleem, maar geen verklarende waarde heeft.'},
+    {term:'Derde factor',def:'Een onderliggende variabele die twee andere variabelen allebei beïnvloedt, waardoor het lijkt of zij elkaar veroorzaken.'},
+  ]},
+  {cat:'Analytics volwassenheid',items:[
+    {term:'Metrics (Descriptive)',def:'Wat is er gebeurd? Het aflezen van cijfers en KPI\'s.'},
+    {term:'Analytics (Diagnostic)',def:'Waarom is het gebeurd? Het zoeken naar patronen en verbanden.'},
+    {term:'Predictive',def:'Wat gaat er gebeuren? Het voorspellen van toekomstig risico op basis van patronen.'},
+    {term:'Prescriptive',def:'Wat moeten we doen? Het omzetten van inzicht naar concreet advies.'},
+  ]},
+];
+const KPI_DEFS={
+  kostenVerzuim:'Loondoorbetaling + vervangingskosten per maand.',
+  verzuim:'Totaal percentage medewerkers ziek gemeld per maand (kort + lang).',
+  lang:'Verzuimmeldingen langer dan 6 weken.',
+  kort:'Verzuimmeldingen korter dan 6 weken.',
+  reIntegratie:'Aantal lopende re-integratietrajecten per maand.',
+  productiviteit:'Teamscore productiviteit, schaal 0–100.',
+  untrainedPct:'Aandeel leidinggevenden zonder afgeronde leiderschapstraining.',
+};
+const SPOOR_TOOLTIP={
+  werkdruk:'De ervaren taakbelasting van medewerkers.',
+  teamstabiliteit:'De mate waarin een team stabiel blijft qua samenstelling.',
+  leiderschap:'De kwaliteit en ervaring van leidinggevenden in verzuimbegeleiding.',
+  ervaringlg:'Het aantal jaren ervaring dat een leidinggevende heeft in de rol.',
+  leeftijd:'De leeftijdsopbouw van medewerkers.',
+  dienstjaren:'Hoe lang medewerkers gemiddeld in dienst zijn.',
+  organisatiegroei:'De snelheid waarmee de organisatie in omvang toeneemt.',
+  opleiding:'Algemene scholing, los van specifieke leiderschapstraining.',
+  vitaliteit:'De fysieke en mentale gezondheid van medewerkers.',
+  reintegratie:'Begeleiding van medewerkers terug naar werk na langdurig verzuim.',
+};
+function buildGlossary(filter){
+  const el=document.getElementById('glossary-body');el.innerHTML='';
+  const f=(filter||'').toLowerCase();
+  let any=false;
+  GLOSSARY.forEach(cat=>{
+    const items=cat.items.filter(it=>!f||it.term.toLowerCase().includes(f)||it.def.toLowerCase().includes(f));
+    if(!items.length)return;
+    any=true;
+    const block=document.createElement('div');block.className='gloss-cat';
+    const h=document.createElement('h4');h.textContent=cat.cat;block.appendChild(h);
+    items.forEach(it=>{
+      const di=document.createElement('div');di.className='gloss-item';
+      const t=document.createElement('div');t.className='gloss-term';t.textContent=it.term;
+      const d=document.createElement('div');d.className='gloss-def';d.textContent=it.def;
+      di.appendChild(t);di.appendChild(d);block.appendChild(di);
+    });
+    el.appendChild(block);
+  });
+  if(!any){const p=document.createElement('p');p.style.cssText='font-size:12px;color:var(--text-faint)';p.textContent='Geen begrippen gevonden voor deze zoekterm.';el.appendChild(p);}
+}
+function openGlossary(){
+  document.getElementById('glossary-modal').classList.add('open');
+  document.getElementById('glossary-search').value='';
+  buildGlossary('');
+}
+function closeGlossary(){document.getElementById('glossary-modal').classList.remove('open');}
+document.getElementById('glossary-modal').addEventListener('click',e=>{if(e.target===document.getElementById('glossary-modal'))closeGlossary();});
+
+// Screen 1 is visible by default, no init needed
+</script>
+</body>
+</html>
