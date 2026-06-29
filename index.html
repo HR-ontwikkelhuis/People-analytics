@@ -608,6 +608,34 @@ function untrainedCurveAt(idx){
   }
   return pts[pts.length-1][1];
 }
+// Twee "verrassende" rivaliserende verklaringen — bewust losgekoppeld van de echte lang-verzuim-formule.
+// Ze laten op het eerste gezicht een plausibele stijging/piek zien (zoals recent onderzoek suggereert:
+// privéstress/mantelzorg en reistijd worden vaak genoemd als oorzaak van verzuim), maar bij nader
+// onderzoek (timing, lag, doorzetting over jaren) verklaren ze de aanhoudende stijging van langdurig
+// verzuim niet zo goed als het ongetrainde-leidinggevenden-spoor. Wie hier blind op afgaat, komt tot een
+// minder overtuigende conclusie dan wie dieper graaft — dat is precies de bedoelde verrassing.
+const PRIVESTRESS_KEYFRAMES=[[0,17],[12,19],[24,23],[36,27],[48,31],[59,33]];
+function priveCurveAt(idx){
+  const pts=PRIVESTRESS_KEYFRAMES;
+  if(idx<=pts[0][0])return pts[0][1];
+  if(idx>=pts[pts.length-1][0])return pts[pts.length-1][1];
+  for(let i=0;i<pts.length-1;i++){
+    const[i0,v0]=pts[i],[i1,v1]=pts[i+1];
+    if(idx>=i0&&idx<=i1)return v0+(v1-v0)*(idx-i0)/(i1-i0);
+  }
+  return pts[pts.length-1][1];
+}
+const REISTIJD_KEYFRAMES=[[0,29],[12,24],[20,26],[26,36],[34,33],[48,31],[59,32]];
+function reistijdCurveAt(idx){
+  const pts=REISTIJD_KEYFRAMES;
+  if(idx<=pts[0][0])return pts[0][1];
+  if(idx>=pts[pts.length-1][0])return pts[pts.length-1][1];
+  for(let i=0;i<pts.length-1;i++){
+    const[i0,v0]=pts[i],[i1,v1]=pts[i+1];
+    if(idx>=i0&&idx<=i1)return v0+(v1-v0)*(idx-i0)/(i1-i0);
+  }
+  return pts[pts.length-1][1];
+}
 _s=42;
 const DATA=MONTHS.map(({key,label,year,month,idx})=>{
   const sea=Math.sin(month/11*Math.PI)*-.15;
@@ -617,6 +645,8 @@ const DATA=MONTHS.map(({key,label,year,month,idx})=>{
   const langDriver=untrainedCurveAt(Math.max(0,idx-LAG))/100;
   const lang=Math.max(.4,.9+langDriver*2.8+sea+srr(-.12,.12));
   const kort=Math.max(1.8,2.8+Math.sin(month/11*Math.PI*1.5)*.5+srr(-.2,.2));
+  const priveStressPct=Math.max(0,Math.round(priveCurveAt(idx)+srr(-2,2)));
+  const reistijdMin=Math.max(15,+(reistijdCurveAt(idx)+srr(-2,2)).toFixed(1));
   const verzuim=+(lang+kort).toFixed(2);
   const kostenVerzuim=Math.round((lang*500*18+kort*180*18)*(1+srr(-.04,.04)));
   const productiviteit=Math.max(55,Math.min(96,87-lang*3.2+srr(-1.5,1.5)));
@@ -636,7 +666,7 @@ const DATA=MONTHS.map(({key,label,year,month,idx})=>{
     meldFreq,meldDuur,reIntegratie,
     teamSales:+tS.Sales.toFixed(2),teamOps:+tS.Ops.toFixed(2),
     teamIT:+tS.IT.toFixed(2),teamHR:+tS.HR.toFixed(2),teamFinance:+tS.Finance.toFixed(2),
-    koffie,itTickets,werkplekTevr,kantoorBez,parkeer};
+    koffie,itTickets,werkplekTevr,kantoorBez,parkeer,priveStressPct,reistijdMin};
 });
 
 // ─── STATS ────────────────────────────────────────────────────────────────
@@ -654,6 +684,11 @@ const prodPeak=avg(DATA.filter(d=>d.year===2023).map(d=>d.productiviteit));
 const prodLossPct=Math.max(0,Math.round((prodBaseline-prodPeak)/prodBaseline*100));
 const costTotal2024=DATA.filter(d=>d.year===2024).reduce((s,d)=>s+d.kostenVerzuim,0);
 const COST_PER_PP_YEAR=500*18*12; // € per procentpunt langdurig verzuim per jaar — rechtstreeks uit de kostenformule
+const priveBaseline=avg(DATA.filter(d=>d.year===2020).map(d=>d.priveStressPct));
+const priveCurrent=avg(DATA.filter(d=>d.year===2024).map(d=>d.priveStressPct));
+const reistijdBaseline=avg(DATA.filter(d=>d.year===2020).map(d=>d.reistijdMin));
+const reistijdPiek=avg(DATA.filter(d=>d.year===2022).map(d=>d.reistijdMin));
+const reistijdCurrent=avg(DATA.filter(d=>d.year===2024).map(d=>d.reistijdMin));
 
 // ─── CENTRALE VERDICT-MAPPING ──────────────────────────────────────────────
 // Eén bron van waarheid voor: hypothese-vergelijking, correlatie-checklist én directiebriefing.
@@ -668,6 +703,8 @@ const SPOOR_VERDICT={
   opleiding:{type:'onzeker',tekst:'Algemene opleiding (niet specifiek leiderschapstraining) laat een wisselend beeld zien — niet overtuigend genoeg als verklaring.'},
   vitaliteit:{type:'onzeker',tekst:'Vitaliteitsdata ontbreken grotendeels in deze dataset — een blinde vlek, geen bevestigd of ontkracht verband.'},
   reintegratie:{type:'gevolg',tekst:'Re-integratietrajecten stijgen mee met langdurig verzuim, maar zijn een gevolg — niet de verklaring zelf.'},
+  privestress:{type:'onzeker',tekst:`Privéomstandigheden (mantelzorg, financiële stress) nemen toe — van ${priveBaseline.toFixed(0)}% (2020) naar ${priveCurrent.toFixed(0)}% (2024) — en dat lijkt op het eerste gezicht een logische verklaring. Maar de timing klopt niet: de stijging loopt niet enkele maanden vóór de stijging van het verzuim, zoals bij de ongetrainde leidinggevenden wél het geval is. Het verband is dus zwakker dan het oogt.`},
+  reistijd:{type:'zwak',tekst:`De gemiddelde reistijd piekte rond de terugkeer naar het kantoor in 2022 (${reistijdPiek.toFixed(0)} min.), maar is daarna weer gezakt naar ${reistijdCurrent.toFixed(0)} min. — vergelijkbaar met 2020 (${reistijdBaseline.toFixed(0)} min.). Een tijdelijke piek, geen doorlopende stijging — verklaart de aanhoudende toename van langdurig verzuim niet.`},
 };
 function verdictToCorrType(t){return t==='sterk'?'relevant':t==='gevolg'?'gevolg':'onzeker';}
 const CHART_VERDICT={
@@ -682,9 +719,11 @@ const CHART_VERDICT={
   werkplek:{type:'rood-haring',tekst:'Werkplek tevredenheid blijft stabiel — geen verband met de stijging van langdurig verzuim.'},
   kantoor:{type:'rood-haring',tekst:'Kantoorbezetting volgt een seizoenspatroon dat losstaat van het verzuim.'},
   parkeer:{type:'rood-haring',tekst:'Parkeerbezetting is vlak over de hele periode — een klassieke rode haring.'},
+  privestress:{type:'onzeker',tekst:`Privéomstandigheden stijgen over de jaren (${priveBaseline.toFixed(0)}% → ${priveCurrent.toFixed(0)}%), maar de timing sluit niet aan op de stijging van het langdurig verzuim — een minder overtuigend verband dan het op het eerste gezicht lijkt.`},
+  reistijd:{type:'rood-haring',tekst:`De reistijd piekte tijdelijk rond de terugkeer naar kantoor (2022), maar is geen doorlopende trend — een rode haring die toevallig samenviel met de algemene onrust van die periode.`},
 };
 const CORR_BADGE={'rood-haring':'Rode haring','relevant':'Sterk verband','onzeker':'Onzeker','gevolg':'Gevolg, geen oorzaak'};
-const HYP_TO_SPOOR={werkdruk:'werkdruk',leiderschap:'leiderschap',teamstabiliteit:'teamstabiliteit',groei:'organisatiegroei',vergrijzing:'leeftijd'};
+const HYP_TO_SPOOR={werkdruk:'werkdruk',leiderschap:'leiderschap',teamstabiliteit:'teamstabiliteit',groei:'organisatiegroei',vergrijzing:'leeftijd',priveomstandigheden:'privestress'};
 function getScenario(){
   // Strikt beperkt tot de sporen die de deelnemer zelf koos in de analyseboom (stap 3) —
   // er wordt nooit teruggevallen op "het echte antwoord" als dat niet onderzocht is.
@@ -895,6 +934,10 @@ const CHART_DEFS=[
    render(data,grid){addCard(grid,'Kantoorinloop per locatie','% bezette werkplekken, gem. per dag',lineChart(data,[{key:'kantoorBez',color:'#9CA3AF',fill:false,w:1.5,dash:'5 3'}],{min:40,max:85}),mkLeg([{c:'#9CA3AF',l:'Bezettingsgraad %'}]));} },
   {id:'parkeer',icon:'🚗',title:'Bezette parkeerplekken',sub:'Gem. per dag, alle locaties samen',desc:'Gemiddeld aantal bezette parkeerplaatsen per dag over alle kantoorlocaties.',
    render(data,grid){addCard(grid,'Bezette parkeerplekken','Gemiddeld per dag, alle locaties',lineChart(data,[{key:'parkeer',color:'#9CA3AF',fill:false,w:1.5,dash:'5 3'}],{}),mkLeg([{c:'#9CA3AF',l:'Parkeerplekken'}]));} },
+  {id:'privestress',icon:'🏠',title:'% Medewerkers met hoge privéstress',sub:'Mantelzorg en/of financiële zorgen',desc:'Recent onderzoek noemt privéstress als verborgen oorzaak van verzuim. Beweegt dit ook zo bij Meridian BV?',
+   render(data,grid){addCard(grid,'% Medewerkers met hoge privéstress','Mantelzorg en/of financiële zorgen, per maand',lineChart(data,[{key:'priveStressPct',color:'#C2185B',fill:true,w:2}],{min:0,max:50}),mkLeg([{c:'#C2185B',l:'% hoge privéstress'}]));} },
+  {id:'reistijd',icon:'🚆',title:'Gem. reistijd woon-werk (min)',sub:'Enkele reis, per maand',desc:'Onderzoek koppelt lange reistijd aan hoger verzuim. Is dat patroon hier ook zichtbaar?',
+   render(data,grid){addCard(grid,'Gemiddelde reistijd woon-werk','Minuten enkele reis, per maand',lineChart(data,[{key:'reistijdMin',color:'#9CA3AF',fill:false,w:1.5,dash:'5 3'}],{min:15,max:45}),mkLeg([{c:'#9CA3AF',l:'Reistijd (min)'}]));} },
 ];
 
 // ─── STATE ────────────────────────────────────────────────────────────────
@@ -992,6 +1035,7 @@ const HYP_OPTIONS=[
   {id:'teamstabiliteit',icon:'👥',lbl:'Teamstabiliteit'},
   {id:'groei',icon:'📈',lbl:'Organisatiegroei'},
   {id:'vergrijzing',icon:'🧓',lbl:'Vergrijzing'},
+  {id:'priveomstandigheden',icon:'🏠',lbl:'Privéomstandigheden'},
   {id:'geenidee',icon:'🤷',lbl:'Geen idee'},
 ];
 function initHypothese(){
@@ -1017,6 +1061,7 @@ const BOOM_TREE=[
     {id:'werkdruk',lbl:'Werkdruk'},
     {id:'teamstabiliteit',lbl:'Teamstabiliteit'},
     {id:'psychveiligheid',lbl:'Psych. veiligheid'},
+    {id:'reistijd',lbl:'Reistijd woon-werk'},
   ]},
   {id:'cat-leiderschap',icon:'👤',lbl:'Leiderschap',leaves:[
     {id:'begeleiding',lbl:'Begeleiding bij verzuim'},
@@ -1025,6 +1070,7 @@ const BOOM_TREE=[
   {id:'cat-medewerkerskenmerken',icon:'🧑',lbl:'Medewerkerskenmerken',leaves:[
     {id:'leeftijd',lbl:'Leeftijd'},
     {id:'dienstjaren',lbl:'Dienstjaren'},
+    {id:'privestress',lbl:'Privéomstandigheden (mantelzorg/financiën)'},
   ]},
   {id:'cat-organisatie',icon:'🏢',lbl:'Organisatie',leaves:[
     {id:'orgveranderingen',lbl:'Organisatieveranderingen'},
@@ -1051,6 +1097,8 @@ const SPOREN=[
   {id:'opleiding',lbl:'Opleiding',treeId:'opleiding'},
   {id:'vitaliteit',lbl:'Vitaliteit',treeId:'vitaliteit'},
   {id:'reintegratie',lbl:'Re-integratie',treeId:'cat-reintegratie'},
+  {id:'privestress',lbl:'Privéomstandigheden (mantelzorg/financiën)',treeId:'privestress'},
+  {id:'reistijd',lbl:'Reistijd woon-werk',treeId:'reistijd'},
 ];
 function highlightedTreeIds(){
   const set=new Set();
@@ -1498,6 +1546,8 @@ const GLOSSARY=[
     {term:'Organisatiegroei',def:'De snelheid waarmee een organisatie in omvang toeneemt — vaak gepaard met veel nieuwe, onervaren leidinggevenden.'},
     {term:'Opleiding',def:'Algemene scholing van medewerkers of leidinggevenden, los van specifieke leiderschapstraining.'},
     {term:'Vitaliteit',def:'De fysieke en mentale gezondheid van medewerkers.'},
+    {term:'Privéomstandigheden',def:'Omstandigheden buiten het werk — zoals mantelzorg of financiële zorgen — die het functioneren van medewerkers kunnen beïnvloeden.'},
+    {term:'Reistijd woon-werk',def:'De gemiddelde tijd die medewerkers kwijt zijn aan woon-werkverkeer, enkele reis.'},
   ]},
   {cat:'Methodiek',items:[
     {term:'Hypothese',def:'Een vooraf geformuleerde aanname over de oorzaak van een probleem, vóórdat je de data hebt gezien.'},
@@ -1522,6 +1572,8 @@ const KPI_DEFS={
   reIntegratie:'Aantal lopende re-integratietrajecten per maand.',
   productiviteit:'Teamscore productiviteit, schaal 0–100.',
   untrainedPct:'Aandeel leidinggevenden zonder afgeronde leiderschapstraining.',
+  priveStressPct:'Aandeel medewerkers met hoge privéstress (mantelzorg en/of financiële zorgen).',
+  reistijdMin:'Gemiddelde reistijd woon-werk in minuten, enkele reis.',
 };
 const SPOOR_TOOLTIP={
   werkdruk:'De ervaren taakbelasting van medewerkers.',
@@ -1534,6 +1586,8 @@ const SPOOR_TOOLTIP={
   opleiding:'Algemene scholing, los van specifieke leiderschapstraining.',
   vitaliteit:'De fysieke en mentale gezondheid van medewerkers.',
   reintegratie:'Begeleiding van medewerkers terug naar werk na langdurig verzuim.',
+  privestress:'Privéomstandigheden zoals mantelzorg of financiële zorgen.',
+  reistijd:'De gemiddelde reistijd woon-werk van medewerkers.',
 };
 function buildGlossary(filter){
   const el=document.getElementById('glossary-body');el.innerHTML='';
