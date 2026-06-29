@@ -97,19 +97,12 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
 .boom-cat-box{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:11.5px;font-weight:700;color:var(--hr-navy);width:100%;transition:all .2s}
 .boom-cat-box.hi{border-color:var(--hr-navy);background:#EAF1F8;color:var(--hr-navy-dark)}
 .boom-leaves-row{display:flex;flex-direction:column;gap:4px;width:100%;margin-top:4px}
-.boom-leaf{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:11px;color:var(--text-muted);transition:all .2s}
+.boom-leaf{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:11px;color:var(--text-muted);transition:all .15s;cursor:pointer;user-select:none}
+.boom-leaf:hover:not(.boom-leaf-disabled){border-color:var(--hr-pink);color:var(--hr-pink-dark)}
 .boom-leaf.hi{border-color:var(--hr-pink);background:#FCE8EF;color:var(--hr-pink-dark);font-weight:700}
+.boom-leaf.boom-leaf-disabled{opacity:.4;cursor:not-allowed}
 .boom-select-panel{margin-bottom:18px}
-.boom-select-panel h3{font-size:14.5px;font-weight:800;margin-bottom:4px}
-.boom-select-sub{font-size:13px;color:var(--text-muted);margin-bottom:14px;line-height:1.6}
-.boom-checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px}
-.boom-check-item{background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .15s}
-.boom-check-item:hover:not(.boom-check-disabled){border-color:var(--hr-navy)}
-.boom-check-item.boom-check-sel{border-color:var(--hr-navy);background:#EAF1F8}
-.boom-check-item.boom-check-disabled{opacity:.4;cursor:not-allowed}
-.boom-check-box{width:16px;height:16px;border-radius:4px;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;transition:all .15s}
-.boom-check-item.boom-check-sel .boom-check-box{background:var(--hr-navy);border-color:var(--hr-navy)}
-.boom-check-lbl{font-size:13px;font-weight:600;color:var(--text)}
+.boom-select-sub{font-size:13px;color:var(--text-muted);font-weight:600;line-height:1.6}
 
 /* ── SCREEN 4: PICKER ── */
 .picker-header{display:flex;align-items:center;gap:12px;margin-bottom:6px;flex-wrap:wrap}
@@ -422,12 +415,10 @@ svg.chart{width:100%;overflow:visible;display:block}
   <div id="prog-boom"></div>
   <div class="pill-tag" style="background:#EAF7EC;color:var(--hr-green-dark)">🌳 Analyseboom</div>
   <h2 style="font-size:20px;font-weight:800;margin-bottom:6px">Verken de analyseboom</h2>
-  <p style="font-size:13px;color:var(--text-muted);margin-bottom:18px">De businessvraag is: <strong style="color:var(--text)">hoe kunnen we het ziekteverzuim verlagen zonder de werkdruk verder te verhogen?</strong> Onderstaande boom laat zien welke categorieën van factoren hieraan kunnen bijdragen — van werkomstandigheden tot re-integratie. Dit zijn nog geen conclusies, maar mogelijke verklaringsrichtingen. Of het vooral om kortdurend of langdurend verzuim gaat, ontdek je straks in het dashboard.</p>
+  <p style="font-size:13px;color:var(--text-muted);margin-bottom:18px">De businessvraag is: <strong style="color:var(--text)">hoe kunnen we het ziekteverzuim verlagen zonder de werkdruk verder te verhogen?</strong> Onderstaande boom laat zien welke categorieën van factoren hieraan kunnen bijdragen — van werkomstandigheden tot re-integratie. Klik in de boom op de factoren die je wilt onderzoeken (<strong style="color:var(--text)">maximaal 3 sporen</strong>). Dit zijn nog geen conclusies, maar mogelijke verklaringsrichtingen. Of het vooral om kortdurend of langdurend verzuim gaat, ontdek je straks in het dashboard.</p>
   <div class="boom-display" id="boom-display"></div>
   <div class="boom-select-panel">
-    <h3>Welke factoren wil je onderzoeken?</h3>
-    <p class="boom-select-sub">Je kunt niet alles tegelijk onderzoeken. Kies <strong style="color:var(--text)">maximaal 3 sporen</strong> — de factoren die jij vermoedt het meest bepalend zijn voor het langdurig verzuim. Je keuze bepaalt straks mee welke grafieken relevant voor je zijn.</p>
-    <div class="boom-checks" id="boom-checks"></div>
+    <p class="boom-select-sub" id="boom-gekozen">Nog geen sporen gekozen — klik op factoren in de boom.</p>
   </div>
   <div class="screen-nav">
     <span style="font-size:12px;color:var(--text-faint)" id="boom-hint-text"></span>
@@ -1060,11 +1051,10 @@ const BOOM_TREE=[
   {id:'cat-werkomstandigheden',icon:'🏗️',lbl:'Werkomstandigheden',leaves:[
     {id:'werkdruk',lbl:'Werkdruk'},
     {id:'teamstabiliteit',lbl:'Teamstabiliteit'},
-    {id:'psychveiligheid',lbl:'Psych. veiligheid'},
     {id:'reistijd',lbl:'Reistijd woon-werk'},
   ]},
   {id:'cat-leiderschap',icon:'👤',lbl:'Leiderschap',leaves:[
-    {id:'begeleiding',lbl:'Begeleiding bij verzuim'},
+    {id:'leiderschap',lbl:'Leiderschap (begeleiding bij verzuim)'},
     {id:'ervaringlg',lbl:'Ervaring leidinggevende'},
   ]},
   {id:'cat-medewerkerskenmerken',icon:'🧑',lbl:'Medewerkerskenmerken',leaves:[
@@ -1073,44 +1063,41 @@ const BOOM_TREE=[
     {id:'privestress',lbl:'Privéomstandigheden (mantelzorg/financiën)'},
   ]},
   {id:'cat-organisatie',icon:'🏢',lbl:'Organisatie',leaves:[
-    {id:'orgveranderingen',lbl:'Organisatieveranderingen'},
-    {id:'groeiteams',lbl:'Groei teams'},
+    {id:'organisatiegroei',lbl:'Organisatiegroei'},
   ]},
   {id:'cat-inzetbaarheid',icon:'⚡',lbl:'Inzetbaarheid',leaves:[
     {id:'opleiding',lbl:'Opleiding'},
     {id:'vitaliteit',lbl:'Vitaliteit'},
   ]},
   {id:'cat-reintegratie',icon:'🔄',lbl:'Re-integratie',leaves:[
-    {id:'doorlooptijd',lbl:'Doorlooptijd trajecten'},
-    {id:'succespercentage',lbl:'Succespercentage'},
+    {id:'reintegratie',lbl:'Re-integratie'},
   ]},
 ];
-// Volgorde en labels exact zoals in de masterclass — "treeId" koppelt elk spoor aan een boomknoop
+// SPOREN is 1-op-1 met de bladeren in BOOM_TREE — elk blad in de boom is rechtstreeks klikbaar
+// en correspondeert met precies één spoor (geen losse, niet-klikbare bladeren meer).
 const SPOREN=[
   {id:'werkdruk',lbl:'Werkdruk',treeId:'werkdruk'},
   {id:'teamstabiliteit',lbl:'Teamstabiliteit',treeId:'teamstabiliteit'},
-  {id:'leiderschap',lbl:'Leiderschap',treeId:'cat-leiderschap'},
+  {id:'reistijd',lbl:'Reistijd woon-werk',treeId:'reistijd'},
+  {id:'leiderschap',lbl:'Leiderschap (begeleiding bij verzuim)',treeId:'leiderschap'},
   {id:'ervaringlg',lbl:'Ervaring leidinggevenden',treeId:'ervaringlg'},
   {id:'leeftijd',lbl:'Leeftijd',treeId:'leeftijd'},
   {id:'dienstjaren',lbl:'Dienstjaren',treeId:'dienstjaren'},
-  {id:'organisatiegroei',lbl:'Organisatiegroei',treeId:'groeiteams'},
+  {id:'privestress',lbl:'Privéomstandigheden (mantelzorg/financiën)',treeId:'privestress'},
+  {id:'organisatiegroei',lbl:'Organisatiegroei',treeId:'organisatiegroei'},
   {id:'opleiding',lbl:'Opleiding',treeId:'opleiding'},
   {id:'vitaliteit',lbl:'Vitaliteit',treeId:'vitaliteit'},
-  {id:'reintegratie',lbl:'Re-integratie',treeId:'cat-reintegratie'},
-  {id:'privestress',lbl:'Privéomstandigheden (mantelzorg/financiën)',treeId:'privestress'},
-  {id:'reistijd',lbl:'Reistijd woon-werk',treeId:'reistijd'},
+  {id:'reintegratie',lbl:'Re-integratie',treeId:'reintegratie'},
 ];
-function highlightedTreeIds(){
-  const set=new Set();
-  state.sporen.forEach(sid=>{
-    const sp=SPOREN.find(s=>s.id===sid);if(!sp)return;
-    set.add(sp.treeId);
-    BOOM_TREE.forEach(cat=>{if(cat.leaves.some(l=>l.id===sp.treeId))set.add(cat.id);});
-  });
-  return set;
+function toggleSpoor(id){
+  const disabled=!state.sporen.has(id)&&state.sporen.size>=MAX_SPOREN;
+  if(disabled)return;
+  if(state.sporen.has(id)) state.sporen.delete(id);
+  else state.sporen.add(id);
+  initBoom();
 }
 function renderBoomDisplay(){
-  const hi=highlightedTreeIds();
+  // Elk blad = precies één spoor (1-op-1 met SPOREN) en is rechtstreeks klikbaar.
   const disp=document.getElementById('boom-display');disp.innerHTML='';
   const root=document.createElement('div');root.className='boom-root2';root.textContent='⚠️ STIJGEND VERZUIM';
   disp.appendChild(root);
@@ -1118,12 +1105,20 @@ function renderBoomDisplay(){
   const row=document.createElement('div');row.className='boom-cats-row';
   BOOM_TREE.forEach(cat=>{
     const col=document.createElement('div');col.className='boom-cat-col';
+    const anySel=cat.leaves.some(l=>state.sporen.has(l.id));
     const c1=document.createElement('div');c1.className='boom-connector';c1.textContent='↓';col.appendChild(c1);
-    const catBox=document.createElement('div');catBox.className='boom-cat-box'+(hi.has(cat.id)?' hi':'');catBox.textContent=cat.icon+' '+cat.lbl;col.appendChild(catBox);
+    const catBox=document.createElement('div');catBox.className='boom-cat-box'+(anySel?' hi':'');catBox.textContent=cat.icon+' '+cat.lbl;col.appendChild(catBox);
     const c2=document.createElement('div');c2.className='boom-connector';c2.textContent='↓';col.appendChild(c2);
     const leavesRow=document.createElement('div');leavesRow.className='boom-leaves-row';
     cat.leaves.forEach(leaf=>{
-      const lf=document.createElement('div');lf.className='boom-leaf'+(hi.has(leaf.id)?' hi':'');lf.textContent=leaf.lbl;leavesRow.appendChild(lf);
+      const sel=state.sporen.has(leaf.id);
+      const disabled=!sel&&state.sporen.size>=MAX_SPOREN;
+      const lf=document.createElement('div');
+      lf.className='boom-leaf'+(sel?' hi':'')+(disabled?' boom-leaf-disabled':'');
+      lf.textContent=(sel?'✓ ':'')+leaf.lbl;
+      if(typeof SPOOR_TOOLTIP!=='undefined'&&SPOOR_TOOLTIP[leaf.id])lf.title=SPOOR_TOOLTIP[leaf.id];
+      lf.addEventListener('click',()=>toggleSpoor(leaf.id));
+      leavesRow.appendChild(lf);
     });
     col.appendChild(leavesRow);
     row.appendChild(col);
@@ -1133,26 +1128,10 @@ function renderBoomDisplay(){
 function initBoom(){
   buildProgress('prog-boom','boom');
   renderBoomDisplay();
-  const checks=document.getElementById('boom-checks');checks.innerHTML='';
-  SPOREN.forEach(sp=>{
-    const sel=state.sporen.has(sp.id);
-    const disabled=!sel&&state.sporen.size>=MAX_SPOREN;
-    const item=document.createElement('div');
-    item.className='boom-check-item'+(sel?' boom-check-sel':'')+(disabled?' boom-check-disabled':'');
-    if(typeof SPOOR_TOOLTIP!=='undefined'&&SPOOR_TOOLTIP[sp.id])item.title=SPOOR_TOOLTIP[sp.id];
-    const box=document.createElement('div');box.className='boom-check-box';box.textContent=sel?'✓':'';
-    const lbl=document.createElement('div');lbl.className='boom-check-lbl';lbl.textContent=sp.lbl;
-    item.appendChild(box);item.appendChild(lbl);
-    item.addEventListener('click',()=>{
-      if(disabled)return;
-      if(state.sporen.has(sp.id)) state.sporen.delete(sp.id);
-      else if(state.sporen.size<MAX_SPOREN) state.sporen.add(sp.id);
-      initBoom();
-    });
-    checks.appendChild(item);
-  });
   const n=state.sporen.size;
   document.getElementById('btn-boom-next').disabled=n===0;
+  const gekozen=document.getElementById('boom-gekozen');
+  if(gekozen)gekozen.textContent=n===0?'Nog geen sporen gekozen — klik op factoren in de boom.':'Gekozen: '+[...state.sporen].map(id=>SPOREN.find(s=>s.id===id)?.lbl||id).join(' · ');
   document.getElementById('boom-hint-text').textContent=n===0?'Kies minstens 1 spoor':n+' van max. '+MAX_SPOREN+' sporen gekozen';
 }
 
