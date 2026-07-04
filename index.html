@@ -74,6 +74,50 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
 .bv-koppeling{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .kop-chip{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-size:11px;color:var(--text-muted)}
 
+/* ── CEO CHALLENGE ── */
+.ceo-quote-block{display:flex;gap:14px;align-items:flex-start;background:#FFF8F0;border:1px solid #F2993E55;border-radius:12px;padding:18px 20px;margin:0 auto 16px;max-width:900px}
+.ceo-avatar{font-size:36px;flex-shrink:0;line-height:1}
+.ceo-name{font-size:11px;font-weight:700;color:var(--hr-orange);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+.ceo-text{font-size:14px;color:var(--text);line-height:1.7;font-style:italic}
+.ceo-challenge{max-width:900px;margin:0 auto 20px;padding:0}
+.ceo-challenge-q{font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px}
+.ceo-options{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+.ceo-opt-btn{display:flex;align-items:center;gap:8px;padding:10px 16px;border:2px solid var(--border);border-radius:10px;background:var(--surface);cursor:pointer;font-size:13px;font-weight:600;color:var(--text);transition:all .15s}
+.ceo-opt-btn:hover{border-color:var(--hr-orange)}
+.ceo-opt-btn.selected{border-color:var(--hr-orange);background:#FFF8F0;color:var(--hr-orange)}
+.ceo-opt-icon{font-size:18px}
+.ceo-reveal-text{font-size:13px;color:var(--text);line-height:1.7;padding:12px 16px;background:#EAF7EC;border-radius:8px;border-left:3px solid var(--hr-green)}
+
+/* ── HYPOTHESE REDEN ── */
+.hyp-reden-block{margin:16px 0;padding:16px;background:var(--surface-2);border-radius:10px;border:1px solid var(--border)}
+.hyp-reden-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px}
+.hyp-reden-grid{display:flex;flex-wrap:wrap;gap:8px}
+.reden-btn{padding:7px 13px;border:2px solid var(--border);border-radius:8px;background:var(--surface);cursor:pointer;font-size:12px;font-weight:600;color:var(--text-muted);transition:all .15s}
+.reden-btn:hover{border-color:var(--hr-navy);color:var(--hr-navy)}
+.reden-btn.selected{border-color:var(--hr-navy);background:#EAF1F8;color:var(--hr-navy)}
+
+/* ── AI ADVOCAAT ── */
+.ai-sep{font-size:11px;color:var(--text-disabled);text-align:center;margin:10px 0 6px;letter-spacing:.06em}
+.ai-q-devil{border-color:var(--hr-pink)!important;color:var(--hr-pink-dark)!important}
+.ai-q-devil:hover{background:#FCE8EF!important}
+
+/* ── REFLECTIESCHERM ── */
+.refl-wrap{max-width:720px;margin:0 auto}
+.refl-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+@media(max-width:600px){.refl-grid{grid-template-columns:1fr}}
+.refl-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px}
+.refl-card-label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.refl-card-value{font-size:13px;color:var(--text);line-height:1.6}
+.refl-vragen{display:flex;flex-direction:column;gap:16px}
+.refl-vraag-block{display:flex;flex-direction:column;gap:6px}
+.refl-label{font-size:13px;font-weight:700;color:var(--text)}
+.refl-input{width:100%;border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text);background:var(--surface);resize:vertical;font-family:inherit;line-height:1.5}
+.refl-input:focus{outline:none;border-color:var(--hr-navy)}
+.refl-zekerheid{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.zekerheid-btn{text-align:left;padding:10px 14px;border:2px solid var(--border);border-radius:8px;background:var(--surface);cursor:pointer;font-size:13px;font-weight:600;color:var(--text);transition:all .15s}
+.zekerheid-btn:hover{border-color:var(--hr-navy)}
+.zekerheid-btn.selected{border-color:var(--hr-navy);background:#EAF1F8;color:var(--hr-navy)}
+
 /* ── SCREEN 2: HYPOTHESE ── */
 .hyp-wrap{max-width:680px;margin:0 auto}
 .hyp-intro{font-size:13.5px;color:var(--text-muted);margin-bottom:20px;line-height:1.7;padding:14px 18px;background:#FFF7EA;border-radius:10px;border-left:3px solid var(--hr-orange)}
@@ -350,7 +394,21 @@ svg.chart{width:100%;overflow:visible;display:block}
     <p>Het ziekteverzuim stijgt al drie jaar. Het management wil begrijpen wat er speelt — en wat eraan te doen is. Jij bent de HR-professional die dat uitzoekt.</p>
   </div>
 
-  <div class="bv-grid">
+  <!-- CEO-quote: kritische opening -->
+  <div class="ceo-quote-block" id="ceo-quote-block">
+    <div class="ceo-avatar">👔</div>
+    <div class="ceo-content">
+      <div class="ceo-name">Marianne de Boer — CEO Meridian BV</div>
+      <div class="ceo-text">"Het verzuim stijgt al drie jaar. Ik denk dat onze medewerkers gewoon minder gemotiveerd zijn — de betrokkenheid bij het bedrijf is de laatste jaren duidelijk gedaald. We moeten ze meer activeren."</div>
+    </div>
+  </div>
+  <div class="ceo-challenge" id="ceo-challenge">
+    <div class="ceo-challenge-q">Ben jij het eens met de conclusie van de CEO?</div>
+    <div class="ceo-options" id="ceo-options"></div>
+    <div class="ceo-reveal" id="ceo-reveal" style="display:none"></div>
+  </div>
+
+  <div class="bv-grid" id="bv-main-grid" style="display:none">
     <div class="bv-card">
       <h3><span class="ic">📉</span> Wat zien we?</h3>
       <ul>
@@ -383,9 +441,9 @@ svg.chart{width:100%;overflow:visible;display:block}
     </div>
   </div>
 
-  <div class="screen-nav" style="max-width:900px;margin:0 auto">
+  <div class="screen-nav" style="max-width:900px;margin:0 auto" id="bv-nav" style="display:none">
     <span class="spacer"></span>
-    <button class="btn-primary" onclick="goto('hypothese')">Formuleer je hypothese →</button>
+    <button class="btn-primary" id="btn-bv-next" onclick="goto('hypothese')" style="display:none">Formuleer je hypothese →</button>
   </div>
   <p class="footer-note">Data zijn gefingeerd en uitsluitend bedoeld voor leerdoeleinden · Meridian BV is een fictieve organisatie</p>
 </div>
@@ -402,7 +460,11 @@ svg.chart{width:100%;overflow:visible;display:block}
       Wat is volgens jou de <strong style="color:var(--text)">belangrijkste oorzaak</strong> van het stijgende ziekteverzuim bij Meridian BV?
     </div>
     <div class="hyp-grid" id="hyp-options"></div>
-    <p style="font-size:11px;color:var(--text-disabled);margin-bottom:16px">Je keuze wordt na de analyse vergeleken met wat de data laten zien.</p>
+    <div class="hyp-reden-block" id="hyp-reden-block" style="display:none">
+      <div class="hyp-reden-title">Waarom denk je dit?</div>
+      <div class="hyp-reden-grid" id="hyp-reden-opties"></div>
+    </div>
+    <p style="font-size:11px;color:var(--text-disabled);margin-bottom:16px">Je keuze én onderbouwing worden na de analyse vergeleken met wat de data laten zien.</p>
     <div class="screen-nav">
       <span class="spacer"></span>
       <button class="btn-primary" id="btn-hyp-next" disabled onclick="goto('boom')">Ga naar de analyseboom →</button>
@@ -517,12 +579,56 @@ svg.chart{width:100%;overflow:visible;display:block}
     <div id="briefing-content"></div>
     <div class="screen-nav">
       <span class="spacer"></span>
-      <button class="btn-primary" onclick="goto('bonus')">Afsluiting →</button>
+      <button class="btn-primary" onclick="goto('reflectie')">Reflectie →</button>
     </div>
   </div>
 </div>
 
 <!-- ══ S8: BONUS ══ -->
+<div id="screen-reflectie" style="display:none">
+  <div id="prog-reflectie"></div>
+  <div class="refl-wrap">
+    <div class="pill-tag" style="background:#EAF7EC;color:var(--hr-green-dark)">🪞 Reflectie</div>
+    <h2 style="font-size:20px;font-weight:800;margin-bottom:6px">Wat heb je geleerd?</h2>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:20px">Je hebt zojuist een volledige People Analytics-cyclus doorlopen. Neem even de tijd om terug te kijken — niet op de data, maar op je eigen redenering.</p>
+
+    <div class="refl-grid">
+      <div class="refl-card">
+        <div class="refl-card-label">🎯 Mijn aanname vooraf</div>
+        <div class="refl-card-value" id="refl-aanname">—</div>
+      </div>
+      <div class="refl-card">
+        <div class="refl-card-label">🔍 Wat de data lieten zien</div>
+        <div class="refl-card-value" id="refl-data">—</div>
+      </div>
+    </div>
+
+    <div class="refl-vragen">
+      <div class="refl-vraag-block">
+        <label class="refl-label">💡 Mijn belangrijkste inzicht uit deze analyse:</label>
+        <textarea class="refl-input" id="refl-inzicht" placeholder="Wat verraste je het meest?" rows="2"></textarea>
+      </div>
+      <div class="refl-vraag-block">
+        <label class="refl-label">🕳️ Welke data miste ik — en had ik eigenlijk nodig?</label>
+        <textarea class="refl-input" id="refl-datamis" placeholder="Bijv. medewerkerstevredenheid per team, exit-interviews, …" rows="2"></textarea>
+      </div>
+      <div class="refl-vraag-block">
+        <label class="refl-label">🔒 Hoe zeker ben ik van mijn conclusie?</label>
+        <div class="refl-zekerheid" id="refl-zekerheid-opties"></div>
+      </div>
+      <div class="refl-vraag-block">
+        <label class="refl-label">🤔 Wat zou je anders aanpakken als je dit opnieuw deed?</label>
+        <textarea class="refl-input" id="refl-anders" placeholder="Bijv. andere sporen kiezen, meer grafieken bekijken, …" rows="2"></textarea>
+      </div>
+    </div>
+
+    <div class="screen-nav" style="margin-top:24px">
+      <span class="spacer"></span>
+      <button class="btn-primary" onclick="goto('bonus')">Afsluiting &amp; transfer →</button>
+    </div>
+  </div>
+</div>
+
 <div id="screen-bonus" style="display:none">
   <div id="prog-bonus"></div>
   <div class="bonus-wrap">
@@ -934,12 +1040,15 @@ const CHART_DEFS=[
 // ─── STATE ────────────────────────────────────────────────────────────────
 const state={
   screen:'business',
+  ceoReactie:null,
   hypothese:null,
+  hypotheseReden:new Set(),
   sporen:new Set(),
   years:[2020,2021,2022,2023,2024],
   selected:new Set(),
   corrSelected:new Set(),
-  verzuimType:null
+  verzuimType:null,
+  reflZekerheid:null
 };
 const MAX_SEL=9;
 
@@ -951,6 +1060,7 @@ const PROG=[
   {lbl:'Data analyseren',screens:['dashboard']},
   {lbl:'Insights',screens:['correlatie']},
   {lbl:'Advies',screens:['beleid']},
+  {lbl:'Reflectie',screens:['reflectie']},
   {lbl:'Transfer',screens:['bonus']},
 ];
 function buildProgress(containerId,currentScreen){
@@ -1002,7 +1112,7 @@ function buildMaturity(containerId,level){
 }
 
 // ─── NAVIGATION ───────────────────────────────────────────────────────────
-const ALL_SCREENS=['business','hypothese','boom','picker','dashboard','correlatie','beleid','bonus'];
+const ALL_SCREENS=['business','hypothese','boom','picker','dashboard','correlatie','beleid','reflectie','bonus'];
 function goto(sc){
   ALL_SCREENS.forEach(s=>{
     document.getElementById('screen-'+s).style.display=s===sc?'':'none';
@@ -1016,6 +1126,7 @@ function goto(sc){
   if(sc==='dashboard') initDashboard();
   if(sc==='correlatie') initCorrelatie();
   if(sc==='beleid') initBeleid();
+  if(sc==='reflectie') initReflectie();
   if(sc==='bonus') initBonus();
 }
 
@@ -1039,10 +1150,11 @@ function initHypothese(){
     const ic=document.createElement('div');ic.className='hyp-icon';ic.textContent=o.icon;
     const lbl=document.createElement('div');lbl.className='hyp-label';lbl.textContent=o.lbl;
     card.appendChild(radio);card.appendChild(ic);card.appendChild(lbl);
-    card.addEventListener('click',()=>{state.hypothese=o.id;initHypothese();});
+    card.addEventListener('click',()=>{state.hypothese=o.id;state.hypotheseReden=new Set();initHypothese();});
     grid.appendChild(card);
   });
-  document.getElementById('btn-hyp-next').disabled=!state.hypothese;
+  initHypotheseReden();
+  if(!state.hypothese) document.getElementById('btn-hyp-next').disabled=true;
 }
 
 // ─── SCREEN 3: ANALYSEBOOM ────────────────────────────────────────────────
@@ -1280,6 +1392,15 @@ function buildAI(){
     };
     grid.appendChild(btn);
   });
+  const sep=document.createElement('div');sep.className='ai-sep';sep.textContent='— Advocaat van de duivel —';grid.appendChild(sep);
+  AI_ADVOCAAT.forEach(qa=>{
+    const btn=document.createElement('button');btn.className='ai-q-btn ai-q-devil';btn.textContent='😈 '+qa.q;
+    btn.onclick=()=>{
+      document.getElementById('ai-response-text').textContent=qa.a;
+      document.getElementById('ai-response').classList.add('open');
+    };
+    grid.appendChild(btn);
+  });
 }
 
 // ─── SCREEN 6: CORRELATIE ─────────────────────────────────────────────────
@@ -1355,7 +1476,8 @@ function initCorrelatie(){
   const hypLbl=HYP_OPTIONS.find(o=>o.id===state.hypothese)?.lbl||'(geen keuze gemaakt)';
   const sporenLbls=[...state.sporen].map(id=>SPOREN.find(s=>s.id===id)?.lbl).filter(Boolean);
   const sporenTxt=sporenLbls.length?sporenLbls.join(', '):'(geen sporen gekozen)';
-  rb.innerHTML=`<strong>Jouw hypothese vooraf:</strong>Je koos voor <em style="color:var(--text)">${state.hypothese?hypLbl+' '+(HYP_OPTIONS.find(o=>o.id===state.hypothese)?.icon||''):'—'}</em>.<br/><strong style="display:block;margin-top:8px">Jouw gekozen sporen in de analyseboom:</strong>${sporenTxt}.`;
+  const redenLbls=[...state.hypotheseReden].map(id=>REDEN_OPTIES.find(o=>o.id===id)?.lbl||id).join(', ')||'—';
+  rb.innerHTML=`<strong>Jouw hypothese vooraf:</strong> Je koos voor <em style="color:var(--text)">${state.hypothese?hypLbl+' '+(HYP_OPTIONS.find(o=>o.id===state.hypothese)?.icon||''):'—'}</em>.<br/><span style="font-size:12px;color:var(--text-muted)">Onderbouwing: ${redenLbls}</span><br/><strong style="display:block;margin-top:8px">Jouw gekozen sporen in de analyseboom:</strong>${sporenTxt}.`;
   buildHypCompare();
   // Correlatie items — exact gelijk aan de sporen die je koos én de grafieken die je bekeken hebt
   const list=document.getElementById('corr-items');list.innerHTML='';
@@ -1493,9 +1615,110 @@ function initBonus(){
   });
 }
 
+// ─── CEO CHALLENGE (scherm 1) ─────────────────────────────────────────────
+const CEO_OPTIES=[
+  {id:'eens',icon:'👍',lbl:'Ja, waarschijnlijk motivatie'},
+  {id:'oneens',icon:'🤔',lbl:'Nee, ik twijfel aan deze conclusie'},
+  {id:'geenidee',icon:'❓',lbl:'Ik weet het nog niet — ik heb data nodig'},
+];
+const CEO_REVEAL={
+  eens:'Interessant! De CEO heeft een aanname gedaan — maar aannames zijn geen bewijs. Een goede HR-professional stelt eerst de vraag: welke data ondersteunen dit? Motivatie is moeilijk te meten. Misschien speelt er iets anders. Straks zie je wat de data écht laten zien.',
+  oneens:'Goed kritisch denken! Het is verleidelijk om de conclusie van de directie over te nemen, maar in People Analytics begin je bij de vraag — niet bij het antwoord. Jij gaat onderzoeken wat de data werkelijk laten zien.',
+  geenidee:'Precies de juiste houding! Zonder data is elke verklaring een aanname. Dat is het startpunt van evidence-based HR: eerst het probleem begrijpen, dan de data raadplegen.',
+};
+function initCEOChallenge(){
+  const grid=document.getElementById('ceo-options');if(!grid)return;grid.innerHTML='';
+  CEO_OPTIES.forEach(o=>{
+    const btn=document.createElement('button');
+    btn.className='ceo-opt-btn'+(state.ceoReactie===o.id?' selected':'');
+    btn.innerHTML=`<span class="ceo-opt-icon">${o.icon}</span><span>${o.lbl}</span>`;
+    btn.addEventListener('click',()=>{
+      state.ceoReactie=o.id;
+      initCEOChallenge();
+      const rev=document.getElementById('ceo-reveal');
+      rev.style.display='';
+      rev.innerHTML=`<div class="ceo-reveal-text">${CEO_REVEAL[o.id]}</div>`;
+      document.getElementById('bv-main-grid').style.display='';
+      const nb=document.getElementById('btn-bv-next');nb.style.display='';
+    });
+    grid.appendChild(btn);
+  });
+}
+
+// ─── HYPOTHESE REDEN (scherm 2) ───────────────────────────────────────────
+const REDEN_OPTIES=[
+  {id:'ervaring',icon:'💼',lbl:'Eerdere ervaring in mijn werk'},
+  {id:'intuitie',icon:'🧠',lbl:'Mijn intuïtie / buikgevoel'},
+  {id:'literatuur',icon:'📚',lbl:'Wat ik heb gelezen of geleerd'},
+  {id:'organisatie',icon:'🏢',lbl:'Wat ik ken uit mijn eigen organisatie'},
+  {id:'ceoverhaal',icon:'👔',lbl:'Wat de CEO net zei'},
+];
+function initHypotheseReden(){
+  const block=document.getElementById('hyp-reden-block');
+  if(!state.hypothese){block.style.display='none';return;}
+  block.style.display='';
+  const grid=document.getElementById('hyp-reden-opties');grid.innerHTML='';
+  REDEN_OPTIES.forEach(o=>{
+    const sel=state.hypotheseReden.has(o.id);
+    const btn=document.createElement('button');
+    btn.className='reden-btn'+(sel?' selected':'');
+    btn.innerHTML=`${o.icon} ${o.lbl}`;
+    btn.addEventListener('click',()=>{
+      if(state.hypotheseReden.has(o.id)) state.hypotheseReden.delete(o.id);
+      else state.hypotheseReden.add(o.id);
+      initHypotheseReden();
+      document.getElementById('btn-hyp-next').disabled=state.hypotheseReden.size===0;
+    });
+    grid.appendChild(btn);
+  });
+  document.getElementById('btn-hyp-next').disabled=state.hypotheseReden.size===0;
+}
+
+// ─── AI ADVOCAAT VAN DE DUIVEL ────────────────────────────────────────────
+const AI_ADVOCAAT=[
+  {q:'Speel advocaat van de duivel 😈',a:'Stel dat je het fout hebt. Welke alternatieve verklaring past ook bij deze data? Als het langdurig verzuim stijgt terwijl kortdurend stabiel blijft — is dat dan echt motivatie? Of is het iets structureels dat je nog niet hebt gezien?'},
+  {q:'Welke verklaring zie je over het hoofd?',a:'Let op de afdelingen met het laagste verzuim. Wat doen die anders? Als één afdeling structureel beter presteert, zit de verklaring mogelijk in iets dat die afdeling wél heeft en andere niet — en dat is zelden motivatie alleen.'},
+  {q:'Welke extra data zou je willen?',a:'Goede vraag. Ik zou willen weten: (1) hoe lang zijn de leidinggevenden per afdeling al in hun rol? (2) welke teams hebben de meeste wisselingen gehad de afgelopen twee jaar? (3) zijn er exit-interviews beschikbaar? Zonder die data is elke conclusie voorbarig.'},
+  {q:'Hoe weet je dat het geen toeval is?',a:'Dat weet je niet — totdat je het getoetst hebt. Een correlatie in een grafiek is geen bewijs van causaliteit. Kan een derde factor zowel het verzuim als de factor die jij ziet verklaren? Denk aan: organisatiegroei, nieuwe leidinggevenden, krapte op de arbeidsmarkt.'},
+];
+
+// ─── REFLECTIESCHERM (scherm 8) ───────────────────────────────────────────
+const ZEKERHEID_OPTIES=[
+  {id:'zeker',lbl:'Heel zeker — de data zijn overtuigend'},
+  {id:'redelijk',lbl:'Redelijk zeker — maar ik heb twijfels'},
+  {id:'twijfel',lbl:'Twijfelachtig — ik had meer data nodig'},
+];
+function initReflectie(){
+  buildProgress('prog-reflectie','reflectie');
+  const scenario=getScenario();
+  const hypLbl=HYP_OPTIONS.find(o=>o.id===state.hypothese)?.lbl||'(geen keuze gemaakt)';
+  const redenLbls=[...state.hypotheseReden].map(id=>REDEN_OPTIES.find(o=>o.id===id)?.lbl||id).join(', ')||'—';
+  const ceoLbl=CEO_OPTIES.find(o=>o.id===state.ceoReactie)?.lbl||'(geen reactie)';
+
+  const aanname=document.getElementById('refl-aanname');
+  aanname.innerHTML=`Jij koos: <strong>${hypLbl}</strong><br><span style="font-size:11px;color:var(--text-muted)">Onderbouwing: ${redenLbls}</span><br><span style="font-size:11px;color:var(--text-muted)">Reactie op CEO: ${ceoLbl}</span>`;
+
+  const dataEl=document.getElementById('refl-data');
+  if(scenario.inconclusive){
+    dataEl.innerHTML=`<span style="color:var(--text-muted)">De sporen die je koos, leverden geen eenduidig sterk verband op. Dat is zelf ook een inzicht: <em>welke sporen had je dan wél moeten kiezen?</em></span>`;
+  } else {
+    dataEl.innerHTML=`De sterkste verklaring die jouw onderzoek opleverde: <strong style="color:var(--hr-navy)">${scenario.oorzaak}</strong>`;
+  }
+
+  const zGrid=document.getElementById('refl-zekerheid-opties');zGrid.innerHTML='';
+  ZEKERHEID_OPTIES.forEach(o=>{
+    const btn=document.createElement('button');
+    btn.className='zekerheid-btn'+(state.reflZekerheid===o.id?' selected':'');
+    btn.textContent=o.lbl;
+    btn.addEventListener('click',()=>{state.reflZekerheid=o.id;initReflectie();});
+    zGrid.appendChild(btn);
+  });
+}
+
 // ─── INIT ─────────────────────────────────────────────────────────────────
 buildAI();
 buildProgress('prog-business','business');
+initCEOChallenge();
 
 // ─── BEGRIPPENLIJST ─────────────────────────────────────────────────────────
 // Eén centrale bron voor definities — getoond op elk scherm, en als tooltip bij KPI's en sporen.
