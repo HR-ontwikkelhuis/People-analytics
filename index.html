@@ -252,6 +252,25 @@ svg.chart{width:100%;overflow:visible;display:block}
 
 /* ── SCREEN 6: CORRELATIE ── */
 .corr-wrap{max-width:720px;margin:0 auto}
+.sth-wrap{max-width:780px;margin:0 auto}
+.sth-cards{display:flex;flex-direction:column;gap:16px;margin:20px 0}
+.sth-card{border:2px solid #ddd;border-radius:14px;padding:20px;display:grid;grid-template-columns:56px 1fr;grid-template-rows:auto auto auto;gap:8px 14px}
+.sth-avatar{font-size:36px;grid-row:1/4;align-self:start;text-align:center;padding-top:4px}
+.sth-info{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sth-naam{font-weight:700;font-size:16px;color:var(--text-dark)}
+.sth-rol{font-size:13px;color:var(--text-muted)}
+.sth-focus-tag{background:rgba(0,0,0,0.07);border-radius:20px;padding:2px 10px;font-size:12px;font-weight:600;color:var(--text-dark)}
+.sth-zorgen{font-size:13.5px;color:var(--text-muted);line-height:1.7}
+.sth-zorg-item{margin-bottom:3px}
+.sth-vraag{font-size:14px;color:var(--text-dark);background:rgba(255,255,255,0.6);border-radius:8px;padding:10px 12px;border-left:3px solid var(--hr-orange);grid-column:2}
+.sth-gevaar{font-size:12.5px;color:#7d3c00;background:#fff3e0;border-radius:8px;padding:8px 12px;grid-column:2;line-height:1.5}
+.sth-question{margin:24px 0 16px}
+.sth-q-title{font-weight:700;font-size:16px;margin-bottom:14px;color:var(--text-dark)}
+.sth-q-options{display:flex;flex-direction:column;gap:10px}
+.sth-opt-btn{background:#fff;border:2px solid #ddd;border-radius:10px;padding:12px 18px;text-align:left;font-size:15px;cursor:pointer;transition:all .2s;font-family:inherit}
+.sth-opt-btn:hover{border-color:var(--hr-orange);background:#fff8f0}
+.sth-opt-btn.selected{border-color:var(--hr-orange);background:#fff3e0;font-weight:600}
+.sth-opt-sub{font-size:12px;font-weight:400;color:var(--text-muted);margin-left:6px}
 .corr-intro{font-size:13.5px;color:var(--text-muted);line-height:1.7;margin-bottom:20px}
 .hyp-reflect{background:#FFF7EA;border:1px solid #F5D9A8;border-left:3px solid var(--hr-orange);border-radius:10px;padding:14px 18px;margin-bottom:14px;font-size:13.5px;color:var(--text-muted);line-height:1.6}
 .hyp-reflect strong{color:var(--text);display:block;margin-bottom:4px}
@@ -437,7 +456,7 @@ svg.chart{width:100%;overflow:visible;display:block}
     <div class="bv-card accent">
       <h3><span class="ic">❓</span> De businessvraag</h3>
       <div class="opdracht-q">Hoe kunnen we het ziekteverzuim verlagen zonder de werkdruk verder te verhogen?</div>
-      <p style="font-size:12px;color:var(--text-muted)">Jouw taak: analyseer de data van 2020–2024, zoek verbanden, onderscheid oorzaken van symptomen en formuleer een advies voor de directie.</p>
+      <p style="font-size:12px;color:var(--text-muted)">Jouw taak: analyseer de data van 2020–2025, zoek verbanden, onderscheid oorzaken van symptomen en formuleer een advies voor de directie.</p>
     </div>
 
     <div class="bv-card">
@@ -526,7 +545,7 @@ svg.chart{width:100%;overflow:visible;display:block}
   <div class="topbar">
     <div class="logo">📊</div>
     <div>
-      <h1>Ziekteverzuim Dashboard <span>Meridian BV · 2020–2024</span></h1>
+      <h1>Ziekteverzuim Dashboard <span>Meridian BV · 2020–2025</span></h1>
       <div class="org-info">
         <div class="org-chip">👥 <b>500</b> medewerkers</div>
         <div class="org-chip">🏭 Sales · Ops · IT · HR · Finance</div>
@@ -575,12 +594,31 @@ svg.chart{width:100%;overflow:visible;display:block}
     <div class="corr-reveal" id="corr-reveal"></div>
     <div class="screen-nav" id="corr-nav" style="display:none">
       <span class="spacer"></span>
-      <button class="btn-primary" onclick="goto('beleid')">Van inzicht naar beleid →</button>
+      <button class="btn-primary" onclick="goto('stakeholders')">Naar stakeholder-perspectieven →</button>
     </div>
   </div>
 </div>
 
 <!-- ══ S7: BELEID ══ -->
+<div id="screen-stakeholders" style="display:none">
+  <div id="prog-stakeholders"></div>
+  <div class="sth-wrap">
+    <div class="pill-tag" style="background:#FFF7EA;color:var(--hr-orange)">👥 Stakeholder-perspectieven</div>
+    <h2 style="font-size:22px;font-weight:900;margin-bottom:6px">Drie mensen wachten op jouw conclusie</h2>
+    <p style="font-size:15px;color:var(--text-muted);margin-bottom:24px">Je hebt je analyse gedaan. Maar voordat je de directie brieft, zijn er drie mensen die jou om een reactie vragen — elk vanuit hun eigen belang. Lees wat zij zeggen.</p>
+    <div class="sth-cards" id="sth-cards"></div>
+    <div class="sth-question" id="sth-question" style="display:none">
+      <div class="sth-q-title">Wiens perspectief weegt het zwaarst in jouw briefing?</div>
+      <div class="sth-q-options" id="sth-q-options"></div>
+      <p style="font-size:12px;color:var(--text-faint);margin-top:10px">Je keuze bepaalt de toon van je advies — en wordt teruggetoond in de reflectie.</p>
+    </div>
+    <div class="screen-nav">
+      <span class="spacer"></span>
+      <button class="btn-primary" id="btn-sth-next" disabled onclick="goto('beleid')">Schrijf de directiebriefing →</button>
+    </div>
+  </div>
+</div>
+
 <div id="screen-beleid" style="display:none">
   <div id="prog-beleid"></div>
   <div id="mat-beleid"></div>
@@ -713,7 +751,7 @@ function srr(a,b){return a+(b-a)*sr();}
 // ─── MONTHS ───────────────────────────────────────────────────────────────
 const ML=['Jan','Feb','Mrt','Apr','Mei','Jun','Jul','Aug','Sep','Okt','Nov','Dec'];
 const MONTHS=[];
-for(let y=2020;y<=2024;y++) for(let m=0;m<12;m++)
+for(let y=2020;y<=2025;y++) for(let m=0;m<12;m++)
   MONTHS.push({key:`${y}-${m}`,label:`${ML[m]}'${String(y).slice(2)}`,year:y,month:m,idx:MONTHS.length});
 
 // ─── DATA ─────────────────────────────────────────────────────────────────
@@ -722,7 +760,7 @@ for(let y=2020;y<=2024;y++) for(let m=0;m<12;m++)
 // tegenspreken dat het verzuim "al drie jaar stijgt"). Langdurig verzuim wordt hier rechtstreeks
 // van afgeleid met 3 maanden vertraging. Het herstel-scenario (wat als de training aanslaat)
 // is bewust een TOEKOMSTGERICHTE vraag — die staat in de kostensimulator op het briefingscherm.
-const UNTRAINED_KEYFRAMES=[[0,15],[12,20],[24,42],[36,62],[48,75],[59,80]];
+const UNTRAINED_KEYFRAMES=[[0,15],[12,20],[24,42],[36,62],[48,75],[59,80],[71,85]];
 function untrainedCurveAt(idx){
   const pts=UNTRAINED_KEYFRAMES;
   if(idx<=pts[0][0])return pts[0][1];
@@ -739,7 +777,7 @@ function untrainedCurveAt(idx){
 // onderzoek (timing, lag, doorzetting over jaren) verklaren ze de aanhoudende stijging van langdurig
 // verzuim niet zo goed als het ongetrainde-leidinggevenden-spoor. Wie hier blind op afgaat, komt tot een
 // minder overtuigende conclusie dan wie dieper graaft — dat is precies de bedoelde verrassing.
-const PRIVESTRESS_KEYFRAMES=[[0,17],[12,19],[24,23],[36,27],[48,31],[59,33]];
+const PRIVESTRESS_KEYFRAMES=[[0,17],[12,19],[24,23],[36,27],[48,31],[59,33],[71,36]];
 function priveCurveAt(idx){
   const pts=PRIVESTRESS_KEYFRAMES;
   if(idx<=pts[0][0])return pts[0][1];
@@ -750,7 +788,7 @@ function priveCurveAt(idx){
   }
   return pts[pts.length-1][1];
 }
-const REISTIJD_KEYFRAMES=[[0,29],[12,24],[20,26],[26,36],[34,33],[48,31],[59,32]];
+const REISTIJD_KEYFRAMES=[[0,29],[12,24],[20,26],[26,36],[34,33],[48,31],[59,32],[71,31]];
 function reistijdCurveAt(idx){
   const pts=REISTIJD_KEYFRAMES;
   if(idx<=pts[0][0])return pts[0][1];
@@ -797,23 +835,23 @@ const DATA=MONTHS.map(({key,label,year,month,idx})=>{
 // ─── STATS ────────────────────────────────────────────────────────────────
 function avg(arr){return arr.length?arr.reduce((a,b)=>a+b,0)/arr.length:0;}
 const langBaseline=avg(DATA.filter(d=>d.year===2020).map(d=>d.lang));
-const langCurrent=avg(DATA.filter(d=>d.year===2024).map(d=>d.lang));
+const langCurrent=avg(DATA.filter(d=>d.year===2025).map(d=>d.lang));
 const kortBaseline=avg(DATA.filter(d=>d.year===2020).map(d=>d.kort));
-const kortCurrent=avg(DATA.filter(d=>d.year===2024).map(d=>d.kort));
+const kortCurrent=avg(DATA.filter(d=>d.year===2025).map(d=>d.kort));
 const extraFTE=Math.round((langCurrent-langBaseline)/100*500*10)/10;
 const reIntegBaseline=avg(DATA.filter(d=>d.year===2020).map(d=>d.reIntegratie));
-const reIntegPeak=avg(DATA.filter(d=>d.year===2023).map(d=>d.reIntegratie));
+const reIntegPeak=avg(DATA.filter(d=>d.year===2024).map(d=>d.reIntegratie));
 const extraReinteg=Math.max(0,Math.round(reIntegPeak-reIntegBaseline));
 const prodBaseline=avg(DATA.filter(d=>d.year===2020).map(d=>d.productiviteit));
-const prodPeak=avg(DATA.filter(d=>d.year===2023).map(d=>d.productiviteit));
+const prodPeak=avg(DATA.filter(d=>d.year===2024).map(d=>d.productiviteit));
 const prodLossPct=Math.max(0,Math.round((prodBaseline-prodPeak)/prodBaseline*100));
-const costTotal2024=DATA.filter(d=>d.year===2024).reduce((s,d)=>s+d.kostenVerzuim,0);
+const costTotal2025=DATA.filter(d=>d.year===2025).reduce((s,d)=>s+d.kostenVerzuim,0);
 const COST_PER_PP_YEAR=500*18*12; // € per procentpunt langdurig verzuim per jaar — rechtstreeks uit de kostenformule
 const priveBaseline=avg(DATA.filter(d=>d.year===2020).map(d=>d.priveStressPct));
-const priveCurrent=avg(DATA.filter(d=>d.year===2024).map(d=>d.priveStressPct));
+const priveCurrent=avg(DATA.filter(d=>d.year===2025).map(d=>d.priveStressPct));
 const reistijdBaseline=avg(DATA.filter(d=>d.year===2020).map(d=>d.reistijdMin));
 const reistijdPiek=avg(DATA.filter(d=>d.year===2022).map(d=>d.reistijdMin));
-const reistijdCurrent=avg(DATA.filter(d=>d.year===2024).map(d=>d.reistijdMin));
+const reistijdCurrent=avg(DATA.filter(d=>d.year===2025).map(d=>d.reistijdMin));
 
 // ─── CENTRALE VERDICT-MAPPING ──────────────────────────────────────────────
 // Eén bron van waarheid voor: hypothese-vergelijking, correlatie-checklist én directiebriefing.
@@ -828,7 +866,7 @@ const SPOOR_VERDICT={
   opleiding:{type:'onzeker',tekst:'Algemene opleiding (niet specifiek leiderschapstraining) laat een wisselend beeld zien — niet overtuigend genoeg als verklaring.'},
   vitaliteit:{type:'onzeker',tekst:'Vitaliteitsdata ontbreken grotendeels in deze dataset — een blinde vlek, geen bevestigd of ontkracht verband.'},
   reintegratie:{type:'gevolg',tekst:'Re-integratietrajecten stijgen mee met langdurig verzuim, maar zijn een gevolg — niet de verklaring zelf.'},
-  privestress:{type:'onzeker',tekst:`Privéomstandigheden (mantelzorg, financiële stress) nemen toe — van ${priveBaseline.toFixed(0)}% (2020) naar ${priveCurrent.toFixed(0)}% (2024) — en dat lijkt op het eerste gezicht een logische verklaring. Maar de timing klopt niet: de stijging loopt niet enkele maanden vóór de stijging van het verzuim, zoals bij de ongetrainde leidinggevenden wél het geval is. Het verband is dus zwakker dan het oogt.`},
+  privestress:{type:'onzeker',tekst:`Privéomstandigheden (mantelzorg, financiële stress) nemen toe — van ${priveBaseline.toFixed(0)}% (2020) naar ${priveCurrent.toFixed(0)}% (2025) — en dat lijkt op het eerste gezicht een logische verklaring. Maar de timing klopt niet: de stijging loopt niet enkele maanden vóór de stijging van het verzuim, zoals bij de ongetrainde leidinggevenden wél het geval is. Het verband is dus zwakker dan het oogt.`},
   reistijd:{type:'zwak',tekst:`De gemiddelde reistijd piekte rond de terugkeer naar het kantoor in 2022 (${reistijdPiek.toFixed(0)} min.), maar is daarna weer gezakt naar ${reistijdCurrent.toFixed(0)} min. — vergelijkbaar met 2020 (${reistijdBaseline.toFixed(0)} min.). Een tijdelijke piek, geen doorlopende stijging — verklaart de aanhoudende toename van langdurig verzuim niet.`},
 };
 function verdictToCorrType(t){return t==='sterk'?'relevant':t==='gevolg'?'gevolg':'onzeker';}
@@ -885,7 +923,7 @@ function buildCorrPool(){
 // ─── ORG CONTEXT ──────────────────────────────────────────────────────────
 const CTX_ROWS=[
   ['Organisatie','Meridian BV, 500 medewerkers, zakelijke dienstverlening'],
-  ['Periode','Januari 2020 t/m december 2024 · maandelijkse meting'],
+  ['Periode','Januari 2020 t/m december 2025 · maandelijkse meting'],
   ['Afdelingen','Sales, Operations, IT, HR, Finance · 3 locaties'],
   ['Leidinggevenden','Aandeel jonge LG (<3 jr. ervaring) is de afgelopen jaren gestegen'],
   ['Beleid','Verzuimprotocol aanwezig; leiderschapstraining is niet verplicht'],
@@ -1072,12 +1110,13 @@ const state={
   hypothese:null,
   hypotheseReden:new Set(),
   sporen:new Set(),
-  years:[2020,2021,2022,2023,2024],
+  years:[2020,2021,2022,2023,2024,2025],
   selected:new Set(),
   corrSelected:new Set(),
   verzuimType:null,
   reflZekerheid:null,
-  badges:new Set()
+  badges:new Set(),
+  stakeholderFocus:null
 };
 const MAX_SEL=9;
 
@@ -1088,6 +1127,7 @@ const PROG=[
   {lbl:'Analyseboom',screens:['boom','picker']},
   {lbl:'Data analyseren',screens:['dashboard']},
   {lbl:'Insights',screens:['correlatie']},
+  {lbl:'Stakeholders',screens:['stakeholders']},
   {lbl:'Advies',screens:['beleid']},
   {lbl:'Reflectie',screens:['reflectie']},
   {lbl:'Transfer',screens:['bonus']},
@@ -1141,7 +1181,7 @@ function buildMaturity(containerId,level){
 }
 
 // ─── NAVIGATION ───────────────────────────────────────────────────────────
-const ALL_SCREENS=['business','hypothese','boom','picker','dashboard','correlatie','beleid','reflectie','bonus'];
+const ALL_SCREENS=['business','hypothese','boom','picker','dashboard','correlatie','stakeholders','beleid','reflectie','bonus'];
 function goto(sc){
   ALL_SCREENS.forEach(s=>{
     document.getElementById('screen-'+s).style.display=s===sc?'':'none';
@@ -1154,6 +1194,7 @@ function goto(sc){
   if(sc==='picker'){initPicker();checkBadges('boom');}
   if(sc==='dashboard') initDashboard();
   if(sc==='correlatie'){initCorrelatie();checkBadges('correlatie');}
+  if(sc==='stakeholders') initStakeholders();
   if(sc==='beleid') initBeleid();
   if(sc==='reflectie'){initReflectie();checkBadges('reflectie');}
   if(sc==='bonus') initBonus();
@@ -1317,11 +1358,11 @@ function initDashboard(){
 function renderImpactBanner(){
   const el=document.getElementById('impact-banner');el.innerHTML='';
   const card=document.createElement('div');card.className='impact-banner';
-  const title=document.createElement('div');title.className='impact-banner-title';title.textContent='💼 BUSINESS IMPACT — huidige situatie (2024) t.o.v. 2020';
+  const title=document.createElement('div');title.className='impact-banner-title';title.textContent='💼 BUSINESS IMPACT — huidige situatie (2025) t.o.v. 2020';
   card.appendChild(title);
   const grid=document.createElement('div');grid.className='impact-banner-grid';
   [
-    ['€'+Math.round(costTotal2024).toLocaleString('nl-NL'),'jaarlijkse kosten (2024)'],
+    ['€'+Math.round(costTotal2025).toLocaleString('nl-NL'),'jaarlijkse kosten (2025)'],
     [extraFTE+' FTE','verloren capaciteit'],
     ['+'+extraReinteg,'extra re-integraties / mnd'],
     [prodLossPct+'%','productiviteitsverlies'],
@@ -1342,7 +1383,7 @@ function renderSporenBanner(){
 }
 function renderDashboard(){
   const yb=document.getElementById('year-btns');yb.innerHTML='';
-  [2020,2021,2022,2023,2024].forEach(y=>{
+  [2020,2021,2022,2023,2024,2025].forEach(y=>{
     const b=document.createElement('button');
     b.className='year-btn'+(state.years.includes(y)?' on':'');
     b.textContent=y;
@@ -1387,7 +1428,7 @@ function renderDashboard(){
     ['Businessvraag','Hoe verlagen we het ziekteverzuim zonder de werkdruk verder te verhogen?'],
     ['Ontdekking',`De stijging wordt vrijwel volledig verklaard door langdurig verzuim (${langBaseline.toFixed(1)}% → ${langCurrent.toFixed(1)}%) — kortdurend bleef stabiel.`],
     ['Inzicht',sporenLbls2.length?`Verzuim hangt samen met: ${sporenLbls2.join(', ')}.`:'Geen van de onderzochte sporen liet een sterk verband zien.'],
-    ['Businessimpact',`€${Math.round(costTotal2024).toLocaleString('nl-NL')} aan kosten in 2024, ${extraFTE} FTE verloren capaciteit, ${prodLossPct}% productiviteitsverlies.`],
+    ['Businessimpact',`€${Math.round(costTotal2025).toLocaleString('nl-NL')} aan kosten in 2025, ${extraFTE} FTE verloren capaciteit, ${prodLossPct}% productiviteitsverlies.`],
     ['Advies',`Pak ${scenario.oorzaak.toLowerCase()} aan. ${scenario.uitleg}`],
     ['KPI om te monitoren',sporenLbls2.length?`Houd vooral bij: ${sporenLbls2[0]} en het langdurig verzuimpercentage per team.`:'Houd het langdurig verzuimpercentage per team in de gaten.'],
   ].forEach(([lbl,txt],i,arr)=>{
@@ -1496,7 +1537,7 @@ function showVerzuimTypeReveal(){
   const el=document.getElementById('vt-reveal');
   const correct=state.verzuimType==='lang';
   el.style.display='';
-  el.innerHTML=`<strong>${correct?'✓ Dat klopt.':'Toch anders:'}</strong>Langdurend verzuim steeg van <strong style="color:var(--text)">${langBaseline.toFixed(1)}%</strong> (2020) naar <strong style="color:var(--danger)">${langCurrent.toFixed(1)}%</strong> (2024). Kortdurend verzuim bleef nagenoeg stabiel: <strong style="color:var(--text)">${kortBaseline.toFixed(2)}%</strong> → <strong style="color:var(--text)">${kortCurrent.toFixed(2)}%</strong>. De stijging in het totale verzuim wordt dus vrijwel volledig verklaard door het langdurige deel — dat is waarom de rest van deze analyse zich daarop richt.`;
+  el.innerHTML=`<strong>${correct?'✓ Dat klopt.':'Toch anders:'}</strong>Langdurend verzuim steeg van <strong style="color:var(--text)">${langBaseline.toFixed(1)}%</strong> (2020) naar <strong style="color:var(--danger)">${langCurrent.toFixed(1)}%</strong> (2025). Kortdurend verzuim bleef nagenoeg stabiel: <strong style="color:var(--text)">${kortBaseline.toFixed(2)}%</strong> → <strong style="color:var(--text)">${kortCurrent.toFixed(2)}%</strong>. De stijging in het totale verzuim wordt dus vrijwel volledig verklaard door het langdurige deel — dat is waarom de rest van deze analyse zich daarop richt.`;
 }
 function initCorrelatie(){
   buildProgress('prog-correlatie','correlatie');
@@ -1567,6 +1608,108 @@ function submitCorr(){
   document.getElementById('corr-nav').style.display='flex';
 }
 
+// ─── SCREEN 7: STAKEHOLDERS ───────────────────────────────────────────────
+const STAKEHOLDERS=[
+  {
+    id:'ceo',
+    naam:'Marianne de Boer',
+    rol:'CEO',
+    avatar:'👩‍💼',
+    kleur:'#e8f4fd',
+    borderKleur:'#2980b9',
+    focus:'Kosten & actie',
+    zorgen:[
+      'Het verzuim kost ons dit jaar al meer dan €2 miljoen.',
+      'Ik wil concrete actie zien, geen eindeloos onderzoek.',
+      'Als het leiderschap het probleem is, willen we namen horen.',
+    ],
+    vraag:'Marianne wil weten: <em>"Wat is de ROI als we dit aanpakken — en hoe snel?"</em>',
+    gevaar:'Let op: Marianne heeft druk om snel te besluiten. Haastige conclusies kunnen schadelijk zijn voor medewerkers.',
+  },
+  {
+    id:'or',
+    naam:'Ahmed Karim',
+    rol:'OR-voorzitter',
+    avatar:'🧑‍🤝‍🧑',
+    kleur:'#eafaf1',
+    borderKleur:'#27ae60',
+    focus:'Privacy & belasting',
+    zorgen:[
+      'Medewerkers maken zich zorgen over wat er met hun data gebeurt.',
+      'We willen niet dat mensen het gevoel krijgen dat ze worden gevolgd.',
+      'Extra maatregelen mogen de werkdruk niet verhogen.',
+    ],
+    vraag:'Ahmed vraagt: <em>"Zijn medewerkers betrokken bij dit onderzoek? Hoe borgen we hun privacy?"</em>',
+    gevaar:'Ahmed vertegenwoordigt de medewerkers. Zijn zorgen zijn legitiem — ook als de data duidelijk lijken.',
+  },
+  {
+    id:'teamleider',
+    naam:'Sandra Pietersen',
+    rol:'Teamleider Operations',
+    avatar:'👷‍♀️',
+    kleur:'#fef9e7',
+    borderKleur:'#f39c12',
+    focus:'Mensen & context',
+    zorgen:[
+      'Mijn team zit in een zware periode — reorganisatie, personeelstekort.',
+      'Ik ben bang dat mijn mensen worden aangewezen als "probleem".',
+      'Verzuim heeft hier vaak een verhaal achter dat data niet laten zien.',
+    ],
+    vraag:'Sandra vraagt: <em>"Zijn jullie ook naar de context gekeken, niet alleen de cijfers?"</em>',
+    gevaar:'Sandra kent haar mensen het beste. Kwantitatieve data missen de menselijke context die zij wel ziet.',
+  },
+];
+
+function initStakeholders(){
+  buildProgress('prog-stakeholders','stakeholders');
+  const cards=document.getElementById('sth-cards');
+  const qBox=document.getElementById('sth-question');
+  const qOpts=document.getElementById('sth-q-options');
+  const btnNext=document.getElementById('btn-sth-next');
+
+  cards.innerHTML='';
+  qBox.style.display='none';
+  btnNext.disabled=true;
+  state.stakeholderFocus=null;
+
+  STAKEHOLDERS.forEach(s=>{
+    const card=document.createElement('div');
+    card.className='sth-card';
+    card.style.background=s.kleur;
+    card.style.borderColor=s.borderKleur;
+    card.innerHTML=`
+      <div class="sth-avatar">${s.avatar}</div>
+      <div class="sth-info">
+        <div class="sth-naam">${s.naam}</div>
+        <div class="sth-rol">${s.rol}</div>
+        <div class="sth-focus-tag">${s.focus}</div>
+      </div>
+      <div class="sth-zorgen">
+        ${s.zorgen.map(z=>`<div class="sth-zorg-item">• ${z}</div>`).join('')}
+      </div>
+      <div class="sth-vraag">${s.vraag}</div>
+      <div class="sth-gevaar">⚠️ ${s.gevaar}</div>
+    `;
+    cards.appendChild(card);
+  });
+
+  // Question: whose perspective weighs heaviest
+  qBox.style.display='block';
+  qOpts.innerHTML='';
+  STAKEHOLDERS.forEach(s=>{
+    const btn=document.createElement('button');
+    btn.className='sth-opt-btn';
+    btn.innerHTML=`${s.avatar} ${s.naam} <span class="sth-opt-sub">${s.rol}</span>`;
+    btn.onclick=()=>{
+      document.querySelectorAll('.sth-opt-btn').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      state.stakeholderFocus=s.id;
+      btnNext.disabled=false;
+    };
+    qOpts.appendChild(btn);
+  });
+}
+
 // ─── SCREEN 7: BELEID ─────────────────────────────────────────────────────
 function initBeleid(){
   buildProgress('prog-beleid','beleid');
@@ -1576,11 +1719,11 @@ function initBeleid(){
   const scenario=getScenario();
   const sporenLbls=[...state.sporen].map(id=>SPOREN.find(s=>s.id===id)?.lbl).filter(Boolean);
   [
-    {icon:'📉',title:'Wat zien we?',html:`<p>Het langdurig verzuim bij Meridian BV stijgt al drie jaar onafgebroken: van gemiddeld <strong style="color:var(--text)">${langBaseline.toFixed(1)}%</strong> in 2020 naar <strong style="color:var(--danger)">${langCurrent.toFixed(1)}%</strong> nu (2024) — een stijging van ${Math.round((langCurrent-langBaseline)*100)/100} procentpunt, zonder tekenen van afvlakking. Het kortdurend verzuim bleef in dezelfde periode stabiel (${kortBaseline.toFixed(2)}% → ${kortCurrent.toFixed(2)}%), wat aangeeft dat de oorzaak structureel van aard is en gericht ingrijpen nodig heeft.</p>`},
+    {icon:'📉',title:'Wat zien we?',html:`<p>Het langdurig verzuim bij Meridian BV stijgt al drie jaar onafgebroken: van gemiddeld <strong style="color:var(--text)">${langBaseline.toFixed(1)}%</strong> in 2020 naar <strong style="color:var(--danger)">${langCurrent.toFixed(1)}%</strong> nu (2025) — een stijging van ${Math.round((langCurrent-langBaseline)*100)/100} procentpunt, zonder tekenen van afvlakking. Het kortdurend verzuim bleef in dezelfde periode stabiel (${kortBaseline.toFixed(2)}% → ${kortCurrent.toFixed(2)}%), wat aangeeft dat de oorzaak structureel van aard is en gericht ingrijpen nodig heeft.</p>`},
     {icon:scenario.inconclusive?'❓':'🔍',title:'Waarschijnlijkste verklaring',cls:scenario.inconclusive?'inconclusive':'',html:`<p><strong style="color:var(--text)">${scenario.oorzaak}.</strong> ${scenario.uitleg}</p>${sporenLbls.length?`<p style="font-size:11px;color:var(--text-faint)">Gebaseerd op jouw onderzochte sporen: ${sporenLbls.join(', ')}.</p>`:''}`},
     {icon:'💶',title:'Businessimpact',html:`<div class="impact-grid">
       <div class="impact-item"><span class="impact-val">${extraFTE}</span><span class="impact-lbl">Extra FTE verloren capaciteit</span></div>
-      <div class="impact-item"><span class="impact-val">€${fmt(costTotal2024)}</span><span class="impact-lbl">Totale kosten 2024</span></div>
+      <div class="impact-item"><span class="impact-val">€${fmt(costTotal2025)}</span><span class="impact-lbl">Totale kosten 2025</span></div>
       <div class="impact-item"><span class="impact-val">${Math.round((langCurrent/langBaseline-1)*100)}%</span><span class="impact-lbl">Stijging t.o.v. baseline 2020</span></div>
     </div>`},
     {icon:'✅',title:'Advies',html:`
@@ -1588,7 +1731,7 @@ function initBeleid(){
       <div class="advies-item"><div class="advies-num">2</div><div>Prioriteer de afdelingen <strong style="color:var(--text)">Sales en Operations</strong>: hoogste verzuim, hoogste aandeel ongetrainde LG.</div></div>
       <div class="advies-item"><div class="advies-num">3</div><div>Overweeg <strong style="color:var(--text)">coaching on the job</strong> voor nieuwe leidinggevenden (<3 jr.) naast formele training.</div></div>`},
     {icon:'🧮',title:'Kostensimulator — wat als het verzuim verandert?',html:`
-      <p>Huidige situatie (2024): langdurig verzuim gemiddeld <strong style="color:var(--text)">${langCurrent.toFixed(1)}%</strong>, jaarlijkse kosten <strong style="color:var(--text)">€${fmt(costTotal2024)}</strong>. Schuif om te zien wat een verandering van 1 of 2 procentpunt betekent.</p>
+      <p>Huidige situatie (2025): langdurig verzuim gemiddeld <strong style="color:var(--text)">${langCurrent.toFixed(1)}%</strong>, jaarlijkse kosten <strong style="color:var(--text)">€${fmt(costTotal2025)}</strong>. Schuif om te zien wat een verandering van 1 of 2 procentpunt betekent.</p>
       <input type="range" id="sim-slider" class="sim-slider" min="-2" max="2" step="0.1" value="0" oninput="updateSimulator(this.value)"/>
       <div class="sim-readout">
         <div class="sim-readout-item"><span class="sim-readout-lbl">Verandering</span><span class="sim-readout-val" id="sim-delta-lbl">±0,0</span> procentpunt</div>
