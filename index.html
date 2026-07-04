@@ -438,8 +438,8 @@ svg.chart{width:100%;overflow:visible;display:block}
   <div id="prog-business"></div>
   <div class="bv-hero">
     <div class="pill-tag" style="background:#FDECEC;color:var(--danger)">🚨 Businessprobleem</div>
-    <h2>Meridian BV heeft een <span>verzuimprobleem</span></h2>
-    <p>Het ziekteverzuim stijgt al drie jaar. Het management wil begrijpen wat er speelt — en wat eraan te doen is. Jij bent de HR-professional die dat uitzoekt.</p>
+    <h2>Meridian BV heeft een <span>kostenprobleem</span></h2>
+    <p>De marges staan onder druk. De directie zoekt naar kostenbesparingen — en het stijgende ziekteverzuim is een van de grootste kostenposten. Jij bent de HR-professional die uitzoekt waar de winst zit, zonder de werkdruk verder te verhogen.</p>
   </div>
 
   <!-- CEO-quote: kritische opening -->
@@ -447,7 +447,7 @@ svg.chart{width:100%;overflow:visible;display:block}
     <div class="ceo-avatar">👔</div>
     <div class="ceo-content">
       <div class="ceo-name">Marianne de Boer — CEO Meridian BV</div>
-      <div class="ceo-text">"Het verzuim stijgt al drie jaar. Ik denk dat onze medewerkers gewoon minder gemotiveerd zijn — de betrokkenheid bij het bedrijf is de laatste jaren duidelijk gedaald. We moeten ze meer activeren."</div>
+      <div class="ceo-text">"De verzuimkosten zijn dit jaar al opgelopen tot meer dan twee miljoen euro — dat kunnen we ons niet veroorloven. Als we niet ingrijpen, raken we onze winstmarge kwijt. In het slechtste geval raakt het de continuïteit van het bedrijf. Ik wil weten wat het verzuim drijft, en ik wil een plan om die kosten structureel te verlagen. Maar we kunnen de werkdruk niet verder verhogen — dat lost niets op."</div>
     </div>
   </div>
   <div class="ceo-challenge" id="ceo-challenge">
@@ -460,18 +460,18 @@ svg.chart{width:100%;overflow:visible;display:block}
     <div class="bv-card">
       <h3><span class="ic">📉</span> Wat zien we?</h3>
       <ul>
-        <li>Ziekteverzuim stijgt elk jaar sinds 2021</li>
-        <li>Kosten lopen fors op, jaar na jaar</li>
+        <li>Verzuimkosten: meer dan €2 miljoen in 2025</li>
+        <li>Langdurig verzuim stijgt elk jaar sinds 2021</li>
         <li>Teams raken structureel onderbezet</li>
-        <li>Productiviteit daalt zichtbaar</li>
-        <li>Re-integratietrajecten nemen toe</li>
+        <li>Productiviteit daalt, winstmarge staat onder druk</li>
+        <li>Re-integratietrajecten en vervanging kosten extra</li>
       </ul>
     </div>
 
     <div class="bv-card accent">
       <h3><span class="ic">❓</span> De businessvraag</h3>
-      <div class="opdracht-q">Hoe kunnen we het ziekteverzuim verlagen zonder de werkdruk verder te verhogen?</div>
-      <p style="font-size:12px;color:var(--text-muted)">Jouw taak: analyseer de data van 2020–2025, zoek verbanden, onderscheid oorzaken van symptomen en formuleer een advies voor de directie.</p>
+      <div class="opdracht-q">Hoe kan Meridian BV de kosten verlagen door het ziekteverzuim te verminderen — zonder de werkdruk verder te verhogen?</div>
+      <p style="font-size:12px;color:var(--text-muted)">Context: de directie zoekt naar kostenbesparing voor winstverbetering — en in een moeilijker scenario: voor het voortbestaan van het bedrijf. Jouw taak: analyseer de data van 2020–2025, zoek verbanden, onderscheid oorzaken van symptomen en formuleer een advies voor de directie.</p>
     </div>
 
     <div class="bv-card">
@@ -525,7 +525,7 @@ svg.chart{width:100%;overflow:visible;display:block}
   <div id="prog-boom"></div>
   <div class="pill-tag" style="background:#EAF7EC;color:var(--hr-green-dark)">🌳 Analyseboom</div>
   <h2 style="font-size:20px;font-weight:800;margin-bottom:6px">Verken de analyseboom</h2>
-  <p style="font-size:13px;color:var(--text-muted);margin-bottom:18px">De businessvraag is: <strong style="color:var(--text)">hoe kunnen we het ziekteverzuim verlagen zonder de werkdruk verder te verhogen?</strong> Onderstaande boom laat zien welke categorieën van factoren hieraan kunnen bijdragen — van werkomstandigheden tot re-integratie. Klik in de boom op de factoren die je wilt onderzoeken (<strong style="color:var(--text)">maximaal 3 sporen</strong>). Dit zijn nog geen conclusies, maar mogelijke verklaringsrichtingen. Of het vooral om kortdurend of langdurend verzuim gaat, ontdek je straks in het dashboard.</p>
+  <p style="font-size:13px;color:var(--text-muted);margin-bottom:18px">De businessvraag is: <strong style="color:var(--text)">hoe kan Meridian BV de kosten verlagen door het ziekteverzuim te verminderen — zonder de werkdruk verder te verhogen?</strong> Onderstaande boom laat zien welke categorieën van factoren hieraan kunnen bijdragen. Klik in de boom op de factoren die jij wilt onderzoeken (<strong style="color:var(--text)">maximaal 3 sporen</strong>). Dit zijn nog geen conclusies, maar mogelijke verklaringsrichtingen. Of het vooral om kortdurend of langdurend verzuim gaat, ontdek je straks in het dashboard.</p>
   <div class="boom-display" id="boom-display"></div>
   <div class="boom-select-panel">
     <p class="boom-select-sub" id="boom-gekozen">Nog geen sporen gekozen — klik op factoren in de boom.</p>
@@ -1990,14 +1990,14 @@ function renderBadgeTray(containerId){
 
 // ─── CEO CHALLENGE (scherm 1) ─────────────────────────────────────────────
 const CEO_OPTIES=[
-  {id:'eens',icon:'👍',lbl:'Ja, waarschijnlijk motivatie'},
-  {id:'oneens',icon:'🤔',lbl:'Nee, ik twijfel aan deze conclusie'},
-  {id:'geenidee',icon:'❓',lbl:'Ik weet het nog niet — ik heb data nodig'},
+  {id:'eens',icon:'👍',lbl:'Eens — we moeten de kosten aanpakken zoals zij zegt'},
+  {id:'oneens',icon:'🤔',lbl:'Ik twijfel — eerst data, dan conclusies'},
+  {id:'geenidee',icon:'❓',lbl:'Ik weet het nog niet — ik heb meer informatie nodig'},
 ];
 const CEO_REVEAL={
-  eens:'Interessant! De CEO heeft een aanname gedaan — maar aannames zijn geen bewijs. Een goede HR-professional stelt eerst de vraag: welke data ondersteunen dit? Motivatie is moeilijk te meten. Misschien speelt er iets anders. Straks zie je wat de data écht laten zien.',
-  oneens:'Goed kritisch denken! Het is verleidelijk om de conclusie van de directie over te nemen, maar in People Analytics begin je bij de vraag — niet bij het antwoord. Jij gaat onderzoeken wat de data werkelijk laten zien.',
-  geenidee:'Precies de juiste houding! Zonder data is elke verklaring een aanname. Dat is het startpunt van evidence-based HR: eerst het probleem begrijpen, dan de data raadplegen.',
+  eens:'De urgentie van Marianne is begrijpelijk — kostendruk is reëel. Maar haar verklaring ("minder motivatie") is een aanname, geen onderbouwde conclusie. Als HR-professional is jouw meerwaarde juist dat je data laat spreken vóórdat je een interventie kiest. Een verkeerde diagnose leidt tot een dure, ineffectieve ingreep — precies wat ze wil vermijden.',
+  oneens:'Goed! De urgentie van de CEO is legitiem — verzuimkosten van meer dan 2 miljoen zijn serieus. Maar haar verklaring is een aanname. Als HR-professional begin jij bij de vraag, niet bij het antwoord. Jij gaat onderzoeken wat de data werkelijk laten zien — en daarmee kun je straks een steviger advies geven.',
+  geenidee:'Precies de juiste houding. Marianne heeft een echte kostenuitdaging — maar zonder data weet je niet waar de oorzaak ligt. Investeer je in motivatieprogramma\'s terwijl het probleem bij leiderschap of werkorganisatie zit? Dan gooi je geld weg. Eerst begrijpen, dan beslissen.',
 };
 function initCEOChallenge(){
   const grid=document.getElementById('ceo-options');if(!grid)return;grid.innerHTML='';
