@@ -373,6 +373,38 @@ svg.chart{width:100%;overflow:visible;display:block}
 .bonus-discuss p{font-size:13.5px;color:var(--text-muted);line-height:1.7}
 
 
+/* ── STATISTIEK KAARTEN ── */
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:16px;box-shadow:var(--shadow)}
+.stat-card-hyp{border-color:var(--hr-orange);border-width:2px}
+.stat-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px}
+.stat-hdr-lbl{font-weight:700;font-size:15px;color:var(--text-dark)}
+.stat-hyp-tag{background:var(--hr-orange);color:#fff;border-radius:20px;padding:1px 8px;font-size:10px;font-weight:700;margin-left:8px;vertical-align:middle}
+.stat-type-tag{border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700}
+.stat-type-sterk{background:#d4edda;color:#155724}
+.stat-type-zwak{background:#f8d7da;color:#721c24}
+.stat-type-onzeker{background:#fff3cd;color:#856404}
+.stat-type-gevolg{background:#e2d9f3;color:#432874}
+.stat-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.stat-pill{background:#f0f0f0;border-radius:20px;padding:4px 12px;font-size:12.5px;font-weight:700;font-family:monospace}
+.stat-pill-r{background:#dbeafe;color:#1e3a8a}
+.stat-pill-sig{background:#d4edda;color:#155724}
+.stat-pill-ns{background:#f8d7da;color:#721c24}
+.stat-pill-na{background:#e9ecef;color:#6c757d}
+.stat-pill-warn{background:#fff3cd;color:#856404}
+.stat-q{margin-bottom:12px}
+.stat-q-causaal{background:#fef3c7;border-radius:8px;padding:12px;border-left:3px solid var(--hr-orange)}
+.stat-q-lbl{font-size:13.5px;font-weight:600;color:var(--text-dark);margin-bottom:8px;line-height:1.5}
+.stat-opts{display:flex;flex-wrap:wrap;gap:8px}
+.stat-opt-btn{background:#fff;border:1.5px solid #ddd;border-radius:8px;padding:7px 14px;font-size:13px;cursor:pointer;font-family:inherit;transition:all .15s}
+.stat-opt-btn:hover:not(.disabled):not(.correct):not(.wrong){border-color:var(--hr-orange);background:#fff8f0}
+.stat-opt-btn.correct{background:#d4edda;border-color:#28a745;color:#155724;font-weight:700;cursor:default}
+.stat-opt-btn.wrong{background:#f8d7da;border-color:#dc3545;color:#721c24;cursor:default}
+.stat-opt-btn.disabled{opacity:.5;cursor:default}
+.stat-fb{border-radius:8px;padding:10px 14px;font-size:13px;line-height:1.6;margin-top:8px}
+.stat-fb-ok{background:#d4edda;color:#155724}
+.stat-fb-err{background:#fff3cd;color:#856404}
+.stat-insight{background:#EAF1F8;border-left:3px solid var(--hr-navy);border-radius:0 8px 8px 0;padding:10px 14px;font-size:13px;color:var(--text-muted);line-height:1.6;margin-top:12px}
+
 /* ── ORG CONTEXT ── */
 .org-context{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:12.5px;color:var(--text-muted);line-height:1.7;box-shadow:var(--shadow)}
 .org-context strong{color:var(--text);display:block;margin-bottom:6px;font-size:12.5px}
@@ -568,12 +600,13 @@ svg.chart{width:100%;overflow:visible;display:block}
     <p class="corr-intro" style="margin-bottom:8px">Eerst dit: voordat je naar mogelijke oorzaken kijkt — welk type verzuim verklaart de stijging het meest? Dat zag je terug in het dashboard, niet in deze tekst.</p>
     <div class="hyp-grid" id="vt-options" style="margin-bottom:10px"></div>
     <div class="hyp-reflect" id="vt-reveal" style="display:none"></div>
-    <h2 style="font-size:20px;font-weight:800;margin:24px 0 10px">Welke factoren vond jij overtuigend?</h2>
-    <p class="corr-intro">Vink aan welke factoren jij overtuigend vond als verklaring voor de stijging.</p>
+    <h2 style="font-size:20px;font-weight:800;margin:24px 0 6px">Interpreteer de statistieken</h2>
     <div class="hyp-reflect" id="hyp-reflect-block"></div>
-    <div class="hypo-compare" id="hyp-compare-block"></div>
+    <div id="hyp-compare-block"></div>
+    <h2 style="font-size:18px;font-weight:800;margin:28px 0 8px">Jouw conclusie: welke factoren zijn overtuigend?</h2>
+    <p class="corr-intro">Vink aan welke factoren jij — op basis van de data die je net analyseerde — als overtuigende verklaring ziet. Alleen factoren uit jouw onderzoek staan hier.</p>
     <div class="corr-items" id="corr-items"></div>
-    <button class="btn-primary" id="btn-corr-submit" onclick="submitCorr()">Bekijk de uitkomst →</button>
+    <button class="btn-primary" id="btn-corr-submit" onclick="submitCorr()">Bekijk de volledige uitkomst →</button>
     <div class="corr-reveal" id="corr-reveal"></div>
     <div class="screen-nav" id="corr-nav" style="display:none">
       <span class="spacer"></span>
@@ -839,18 +872,30 @@ const reistijdCurrent=avg(DATA.filter(d=>d.year===2025).map(d=>d.reistijdMin));
 // ─── CENTRALE VERDICT-MAPPING ──────────────────────────────────────────────
 // Eén bron van waarheid voor: hypothese-vergelijking, correlatie-checklist én directiebriefing.
 const SPOOR_VERDICT={
-  werkdruk:{type:'zwak',tekst:'Werkdruk laat in de data geen consistent verband zien met langdurig verzuim — het volgt eerder het seizoenspatroon van kortdurend verzuim.'},
-  teamstabiliteit:{type:'sterk',tekst:'Teamstabiliteit hangt sterk samen met langdurig verzuim: teams met veel wisselingen (vaak gevolg van snelle groei) laten een duidelijk hoger langdurig verzuim zien.'},
-  leiderschap:{type:'sterk',tekst:'Het aandeel ongetrainde leidinggevenden beweegt nagenoeg gelijk op met het langdurig verzuim — in timing én richting. Het sterkste verband in de dataset.'},
-  ervaringlg:{type:'sterk',tekst:'Minder ervaren leidinggevenden signaleren verzuim minder snel en begeleiden minder effectief, wat samenhangt met langere verzuimduur.'},
-  leeftijd:{type:'zwak',tekst:'De leeftijdsopbouw verandert nauwelijks in deze periode en verklaart de stijging niet.'},
-  dienstjaren:{type:'zwak',tekst:'Dienstjaren tonen geen consistent patroon dat de stijging van langdurig verzuim verklaart.'},
-  organisatiegroei:{type:'sterk',tekst:'De snelle groei van de organisatie in 2021–2022 leidde tot veel nieuwe, onervaren leidinggevenden — een directe aanjager van het probleem.'},
-  opleiding:{type:'onzeker',tekst:'Algemene opleiding (niet specifiek leiderschapstraining) laat een wisselend beeld zien — niet overtuigend genoeg als verklaring.'},
-  vitaliteit:{type:'onzeker',tekst:'Vitaliteitsdata ontbreken grotendeels in deze dataset — een blinde vlek, geen bevestigd of ontkracht verband.'},
-  reintegratie:{type:'gevolg',tekst:'Re-integratietrajecten stijgen mee met langdurig verzuim, maar zijn een gevolg — niet de verklaring zelf.'},
-  privestress:{type:'onzeker',tekst:`Privéomstandigheden (mantelzorg, financiële stress) nemen toe — van ${priveBaseline.toFixed(0)}% (2020) naar ${priveCurrent.toFixed(0)}% (2025) — en dat lijkt op het eerste gezicht een logische verklaring. Maar de timing klopt niet: de stijging loopt niet enkele maanden vóór de stijging van het verzuim, zoals bij de ongetrainde leidinggevenden wél het geval is. Het verband is dus zwakker dan het oogt.`},
-  reistijd:{type:'zwak',tekst:`De gemiddelde reistijd piekte rond de terugkeer naar het kantoor in 2022 (${reistijdPiek.toFixed(0)} min.), maar is daarna weer gezakt naar ${reistijdCurrent.toFixed(0)} min. — vergelijkbaar met 2020 (${reistijdBaseline.toFixed(0)} min.). Een tijdelijke piek, geen doorlopende stijging — verklaart de aanhoudende toename van langdurig verzuim niet.`},
+  werkdruk:{type:'zwak',tekst:'Werkdruk laat in de data geen consistent verband zien met langdurig verzuim — het volgt eerder het seizoenspatroon van kortdurend verzuim.',
+    stats:{r:0.29,p:0.14,n:72,sign:false,causaal:false,causaaltekst:'Geen causaliteitsclaim mogelijk: het verband is te zwak en niet significant.'}},
+  teamstabiliteit:{type:'sterk',tekst:'Teamstabiliteit hangt sterk samen met langdurig verzuim: teams met veel wisselingen (vaak gevolg van snelle groei) laten een duidelijk hoger langdurig verzuim zien.',
+    stats:{r:0.83,p:0.001,n:72,sign:true,causaal:false,causaaltekst:'Sterk en significant — maar correlatie bewijst geen causaliteit. De teamwisselingen en het verzuim kunnen beide worden veroorzaakt door een derde factor: snelle organisatiegroei.'}},
+  leiderschap:{type:'sterk',tekst:'Het aandeel ongetrainde leidinggevenden beweegt nagenoeg gelijk op met het langdurig verzuim — in timing én richting. Het sterkste verband in de dataset.',
+    stats:{r:0.91,p:0.001,n:72,sign:true,causaal:true,causaaltekst:'Sterk, significant, én de stijging van ongetrainde leidinggevenden loopt 3 maanden vóór de stijging van het verzuim. Dat tijdsverband maakt een causale claim plausibeler — maar bewijs vraagt nog een experiment (bijv. een pilot met training).'}},
+  ervaringlg:{type:'sterk',tekst:'Minder ervaren leidinggevenden signaleren verzuim minder snel en begeleiden minder effectief, wat samenhangt met langere verzuimduur.',
+    stats:{r:0.87,p:0.001,n:72,sign:true,causaal:false,causaaltekst:'Sterk en significant. Of dit causaal is, vraagt extra onderzoek: vergeleken de teams met onervaren leidinggevenden ook op andere kenmerken (afdelingsgrootte, type werk)?'}},
+  leeftijd:{type:'zwak',tekst:'De leeftijdsopbouw verandert nauwelijks in deze periode en verklaart de stijging niet.',
+    stats:{r:0.18,p:0.32,n:72,sign:false,causaal:false,causaaltekst:'Niet significant. Dit verband is te zwak om enige conclusie op te baseren.'}},
+  dienstjaren:{type:'zwak',tekst:'Dienstjaren tonen geen consistent patroon dat de stijging van langdurig verzuim verklaart.',
+    stats:{r:0.22,p:0.21,n:72,sign:false,causaal:false,causaaltekst:'Niet significant. Dienstjaren zijn geen verklarende factor op basis van deze data.'}},
+  organisatiegroei:{type:'sterk',tekst:'De snelle groei van de organisatie in 2021–2022 leidde tot veel nieuwe, onervaren leidinggevenden — een directe aanjager van het probleem.',
+    stats:{r:0.79,p:0.001,n:72,sign:true,causaal:false,causaaltekst:'Sterk en significant — maar organisatiegroei werkt via een tussenstap (meer onervaren leidinggevenden). Groei zelf veroorzaakt geen verzuim; het effect loopt via leiderschapskwaliteit.'}},
+  opleiding:{type:'onzeker',tekst:'Algemene opleiding (niet specifiek leiderschapstraining) laat een wisselend beeld zien — niet overtuigend genoeg als verklaring.',
+    stats:{r:0.44,p:0.04,n:72,sign:true,causaal:false,causaaltekst:'Statistisch net significant (p = 0.04), maar het verband is matig sterk. Pas op: met 72 meetpunten is p = 0.04 kwetsbaar voor toevalsvariatie. Dit vraagt replicatie.'}},
+  vitaliteit:{type:'onzeker',tekst:'Vitaliteitsdata ontbreken grotendeels in deze dataset — een blinde vlek, geen bevestigd of ontkracht verband.',
+    stats:{r:null,p:null,n:18,sign:null,causaal:false,causaaltekst:'Te weinig data (n = 18 maanden) om uitspraken te doen. Ontbrekende data zijn zelf informatief: wat zegt het dat we dit niet meten?'}},
+  reintegratie:{type:'gevolg',tekst:'Re-integratietrajecten stijgen mee met langdurig verzuim, maar zijn een gevolg — niet de verklaring zelf.',
+    stats:{r:0.94,p:0.001,n:72,sign:true,causaal:false,causaaltekst:'Zeer sterk en significant — maar dit is een klassiek gevolg-correlaat. Re-integratie stijgt ná het verzuim, niet ervóór. Hoge r betekent niet "oorzaak". Vergelijk: meer ambulances = meer ongelukken is ook r ≈ 0.95.'}},
+  privestress:{type:'onzeker',tekst:`Privéomstandigheden (mantelzorg, financiële stress) nemen toe — van ${priveBaseline.toFixed(0)}% (2020) naar ${priveCurrent.toFixed(0)}% (2025) — en dat lijkt op het eerste gezicht een logische verklaring. Maar de timing klopt niet: de stijging loopt niet enkele maanden vóór de stijging van het verzuim, zoals bij de ongetrainde leidinggevenden wél het geval is. Het verband is dus zwakker dan het oogt.`,
+    stats:{r:0.68,p:0.003,n:72,sign:true,causaal:false,causaaltekst:'Significant en redelijk sterk — maar let op de timing: de stijging van privéstress loopt gelijk met het verzuim, niet ervóór. Dat maakt een causale claim zwakker. Bovendien: is privéstress oorzaak of ook gevolg van verzuim?'}},
+  reistijd:{type:'zwak',tekst:`De gemiddelde reistijd piekte rond de terugkeer naar het kantoor in 2022 (${reistijdPiek.toFixed(0)} min.), maar is daarna weer gezakt naar ${reistijdCurrent.toFixed(0)} min. — vergelijkbaar met 2020 (${reistijdBaseline.toFixed(0)} min.). Een tijdelijke piek, geen doorlopende stijging — verklaart de aanhoudende toename van langdurig verzuim niet.`,
+    stats:{r:0.41,p:0.06,n:72,sign:false,causaal:false,causaaltekst:'Net niet significant (p = 0.06). De piek in 2022 verklaart een tijdelijke stijging, niet de aanhoudende trend. Een rode haring die éénmalig samenviel met onrust door terugkeer naar kantoor.'}},
 };
 function verdictToCorrType(t){return t==='sterk'?'relevant':t==='gevolg'?'gevolg':'onzeker';}
 const CHART_VERDICT={
@@ -1099,7 +1144,8 @@ const state={
   verzuimType:null,
   reflZekerheid:null,
   badges:new Set(),
-  stakeholderFocus:null
+  stakeholderFocus:null,
+  corrInterpretaties:{}
 };
 const MAX_SEL=9;
 
@@ -1438,39 +1484,170 @@ function buildAI(){
 
 // ─── SCREEN 6: CORRELATIE ─────────────────────────────────────────────────
 function buildHypCompare(){
-  // Toont uitsluitend verdicts voor sporen die de deelnemer zelf onderzocht (state.sporen).
-  // Als de oorspronkelijke hypothese niet onderzocht is, zeggen we dat expliciet —
-  // we bevestigen of ontkrachten nooit iets dat niet gemeten is.
+  // Toont uitsluitend verdicts + statistieken voor de sporen die de deelnemer zelf onderzocht.
   const el=document.getElementById('hyp-compare-block');el.innerHTML='';
-  const title=document.createElement('div');
-  title.style.cssText='font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px';
-  title.textContent='Wat blijkt uit de data — voor de sporen die je onderzocht';
-  el.appendChild(title);
-  const hypLbl=HYP_OPTIONS.find(o=>o.id===state.hypothese)?.lbl;
-  const hypSporId=HYP_TO_SPOOR[state.hypothese];
-  if(!state.hypothese||state.hypothese==='geenidee'){
-    const p=document.createElement('p');p.style.cssText='font-size:12px;color:var(--text-faint);margin-bottom:8px';
-    p.textContent='Je koos vooraf geen duidelijke hypothese — dat is ook een prima startpunt.';
-    el.appendChild(p);
-  } else if(!hypSporId||!state.sporen.has(hypSporId)){
-    const p=document.createElement('p');p.style.cssText='font-size:12px;color:var(--text-muted);margin-bottom:8px';
-    p.innerHTML=`Je hypothese was <strong>${hypLbl}</strong>, maar dat spoor heb je niet onderzocht in de analyseboom (stap 3). We kunnen dus niet zeggen of die klopt — alleen voor de sporen die je wél koos, weten we wat de data laten zien:`;
-    el.appendChild(p);
-  }
   if(!state.sporen.size){
-    const p=document.createElement('p');p.style.cssText='font-size:12px;color:var(--text-faint)';
-    p.textContent='Je hebt geen sporen onderzocht — ga naar stap 3 om dit aan te vullen.';
-    el.appendChild(p);
+    el.innerHTML='<p style="font-size:13px;color:var(--text-faint)">Je hebt geen sporen onderzocht — ga naar stap 3 om sporen te kiezen.</p>';
     return;
   }
+  const hypSporId=HYP_TO_SPOOR[state.hypothese];
+  const title=document.createElement('div');
+  title.style.cssText='font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px';
+  title.textContent='Statistische uitkomsten — alleen voor de sporen die jij onderzocht';
+  el.appendChild(title);
+
+  const intro=document.createElement('p');
+  intro.style.cssText='font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.6';
+  intro.innerHTML='Hieronder zie je de <strong>Pearson correlatie-coëfficiënt (r)</strong> tussen elk onderzocht spoor en het langdurig verzuim. Beantwoord per spoor de twee vragen — ontdek daarna of jouw interpretatie klopt.';
+  el.appendChild(intro);
+
   [...state.sporen].forEach(sporId=>{
-    const v=SPOOR_VERDICT[sporId]||{type:'onzeker'};
+    const v=SPOOR_VERDICT[sporId]||{type:'onzeker',tekst:'Geen data beschikbaar.',stats:{r:null,p:null,n:0,sign:null,causaal:false,causaaltekst:''}};
     const lbl=SPOREN.find(s=>s.id===sporId)?.lbl||sporId;
     const isYourHyp=hypSporId===sporId;
-    const sterk=v.type==='sterk';
-    const row=document.createElement('div');row.className='hc-item'+(isYourHyp?' hc-yours':'');
-    row.innerHTML=`<span class="hc-icon">${sterk?'✓':'✗'}</span><span>${lbl} toont ${sterk?'een sterk':'slechts een zwak'} verband${isYourHyp?' <em>(jouw hypothese)</em>':''}</span>`;
-    el.appendChild(row);
+    const st=v.stats||{};
+    const interpr=state.corrInterpretaties[sporId]||{};
+
+    const card=document.createElement('div');
+    card.className='stat-card'+(isYourHyp?' stat-card-hyp':'');
+    card.id='stat-card-'+sporId;
+
+    // Header row
+    const hdr=document.createElement('div');hdr.className='stat-hdr';
+    const hdrLbl=document.createElement('div');hdrLbl.className='stat-hdr-lbl';
+    hdrLbl.innerHTML=lbl+(isYourHyp?' <span class="stat-hyp-tag">jouw hypothese</span>':'');
+    const typeTag=document.createElement('div');
+    typeTag.className='stat-type-tag stat-type-'+v.type;
+    typeTag.textContent={sterk:'Sterk verband',zwak:'Zwak verband',onzeker:'Onzeker',gevolg:'Gevolg'}[v.type]||v.type;
+    hdr.appendChild(hdrLbl);hdr.appendChild(typeTag);
+    card.appendChild(hdr);
+
+    // Stats row
+    const statsRow=document.createElement('div');statsRow.className='stat-row';
+    if(st.r===null){
+      statsRow.innerHTML=`<div class="stat-pill stat-pill-na">r = n.v.t.</div><div class="stat-pill stat-pill-na">p = n.v.t.</div><div class="stat-pill">n = ${st.n} maanden</div><div class="stat-pill stat-pill-warn">⚠ Te weinig data</div>`;
+    } else {
+      const rAbs=Math.abs(st.r);
+      const rStr=st.r>0?`+${st.r.toFixed(2)}`:st.r.toFixed(2);
+      const sigClass=st.sign?'stat-pill-sig':'stat-pill-ns';
+      const sigLbl=st.sign?'p < 0.05 ✓':'p ≥ 0.05 ✗';
+      const pDisp=st.p===0.001?'< 0.001':st.p.toFixed(2);
+      statsRow.innerHTML=`<div class="stat-pill stat-pill-r">r = ${rStr}</div><div class="stat-pill ${sigClass}">p = ${pDisp} &nbsp;(${sigLbl})</div><div class="stat-pill">n = ${st.n} maanden</div>`;
+    }
+    card.appendChild(statsRow);
+
+    // Q1: wat betekent r?
+    if(st.r!==null){
+      const q1=document.createElement('div');q1.className='stat-q';
+      q1.innerHTML='<div class="stat-q-lbl">1. Hoe zou jij r = '+(st.r>0?'+':'')+st.r.toFixed(2)+' omschrijven?</div>';
+      const q1opts=[
+        {id:'sterk_pos',lbl:'Sterk positief verband',correct:Math.abs(st.r)>=0.7&&st.r>0},
+        {id:'matig_pos',lbl:'Matig positief verband',correct:Math.abs(st.r)>=0.4&&Math.abs(st.r)<0.7&&st.r>0},
+        {id:'zwak',lbl:'Zwak of geen verband',correct:Math.abs(st.r)<0.4},
+        {id:'negatief',lbl:'Negatief verband',correct:st.r<0},
+      ].filter(o=>{
+        // only show plausible options (include correct + 2 distractors)
+        return true;
+      });
+      const q1wrap=document.createElement('div');q1wrap.className='stat-opts';
+      q1opts.forEach(o=>{
+        const btn=document.createElement('button');btn.className='stat-opt-btn';
+        if(interpr.q1)btn.classList.add(interpr.q1===o.id?(o.correct?'correct':'wrong'):'disabled');
+        btn.textContent=o.lbl;
+        btn.onclick=()=>{
+          if(interpr.q1)return;
+          state.corrInterpretaties[sporId]={...interpr,q1:o.id,q1correct:o.correct};
+          buildHypCompare();
+        };
+        q1wrap.appendChild(btn);
+      });
+      q1.appendChild(q1wrap);
+      if(interpr.q1){
+        const fb=document.createElement('div');fb.className='stat-fb '+(interpr.q1correct?'stat-fb-ok':'stat-fb-err');
+        const rAbs=Math.abs(st.r);
+        const rDesc=rAbs>=0.7?'sterk':rAbs>=0.4?'matig':'zwak';
+        const rDir=st.r>0?'positief':'negatief';
+        fb.textContent=(interpr.q1correct?'✓ Juist. ':'✗ Niet helemaal. ')+`r = ${st.r.toFixed(2)} is een ${rDesc} ${rDir} verband. Als r dichter bij 1 (of -1) ligt, is het verband sterker; r ≈ 0 betekent geen lineair verband.`;
+        q1.appendChild(fb);
+      }
+      card.appendChild(q1);
+
+      // Q2: significant?
+      const q2=document.createElement('div');q2.className='stat-q';
+      q2.innerHTML='<div class="stat-q-lbl">2. Is dit verband statistisch significant? (drempel: p &lt; 0.05)</div>';
+      const q2wrap=document.createElement('div');q2wrap.className='stat-opts';
+      [{id:'ja',lbl:'Ja, significant',correct:st.sign===true},
+       {id:'nee',lbl:'Nee, niet significant',correct:st.sign===false},
+      ].forEach(o=>{
+        const btn=document.createElement('button');btn.className='stat-opt-btn';
+        if(interpr.q2)btn.classList.add(interpr.q2===o.id?(o.correct?'correct':'wrong'):'disabled');
+        btn.textContent=o.lbl;
+        btn.onclick=()=>{
+          if(!interpr.q1||interpr.q2)return;
+          state.corrInterpretaties[sporId]={...state.corrInterpretaties[sporId],q2:o.id,q2correct:o.correct};
+          buildHypCompare();
+        };
+        q2wrap.appendChild(btn);
+      });
+      if(!interpr.q1){const note=document.createElement('p');note.style.cssText='font-size:11px;color:var(--text-faint);margin:4px 0 0';note.textContent='Beantwoord vraag 1 eerst.';q2wrap.appendChild(note);}
+      q2.appendChild(q2wrap);
+      if(interpr.q2){
+        const pDisp=st.p===0.001?'< 0.001':st.p.toFixed(2);
+        const fb2=document.createElement('div');fb2.className='stat-fb '+(interpr.q2correct?'stat-fb-ok':'stat-fb-err');
+        fb2.textContent=(interpr.q2correct?'✓ Correct. ':'✗ Niet helemaal. ')+`p = ${pDisp} — ${st.sign?'dit valt onder de drempel van 0.05, dus statistisch significant. Dat betekent: dit verband is waarschijnlijk niet puur toeval.':'dit valt boven de drempel van 0.05, dus niet statistisch significant. Wees voorzichtig met conclusies.'}`;
+        q2.appendChild(fb2);
+      }
+      card.appendChild(q2);
+
+      // Causateitsvraag: alleen tonen als beide vragen beantwoord
+      if(interpr.q1&&interpr.q2){
+        const q3=document.createElement('div');q3.className='stat-q stat-q-causaal';
+        q3.innerHTML='<div class="stat-q-lbl">3. Mag je op basis van r = '+(st.r>0?'+':'')+st.r.toFixed(2)+' concluderen dat <em>'+lbl.toLowerCase()+'</em> het verzuim <strong>veroorzaakt</strong>?</div>';
+        const q3wrap=document.createElement('div');q3wrap.className='stat-opts';
+        [{id:'ja',lbl:'Ja, dit bewijst causaliteit',correct:false},
+         {id:'nee',lbl:'Nee, correlatie ≠ causaliteit',correct:true},
+         {id:'soms',lbl:'Alleen als r > 0.8',correct:false},
+        ].forEach(o=>{
+          const btn=document.createElement('button');btn.className='stat-opt-btn';
+          if(interpr.q3)btn.classList.add(interpr.q3===o.id?(o.correct?'correct':'wrong'):'disabled');
+          btn.textContent=o.lbl;
+          btn.onclick=()=>{
+            if(interpr.q3)return;
+            state.corrInterpretaties[sporId]={...state.corrInterpretaties[sporId],q3:o.id};
+            buildHypCompare();
+          };
+          q3wrap.appendChild(btn);
+        });
+        q3.appendChild(q3wrap);
+        if(interpr.q3){
+          const fb3=document.createElement('div');fb3.className='stat-fb '+(interpr.q3==='nee'?'stat-fb-ok':'stat-fb-err');
+          fb3.innerHTML='<strong>Correlatie bewijst nooit causaliteit</strong> — hoe hoog r ook is. '+v.stats.causaaltekst;
+          q3.appendChild(fb3);
+        }
+        card.appendChild(q3);
+      }
+    } else {
+      // geen r (vitaliteit)
+      const nodata=document.createElement('div');nodata.className='stat-q';
+      nodata.innerHTML='<div class="stat-q-lbl">⚠ Te weinig data voor statistische analyse (n = '+st.n+' maanden). Wat betekent dit voor je conclusie?</div>';
+      const ndbtn=document.createElement('button');ndbtn.className='stat-opt-btn'+(interpr.q1?' disabled':'');
+      ndbtn.textContent='Ik kan hier geen uitspraak over doen op basis van deze data';
+      ndbtn.onclick=()=>{if(!interpr.q1){state.corrInterpretaties[sporId]={q1:'nodata',q1correct:true};buildHypCompare();}};
+      nodata.appendChild(ndbtn);
+      if(interpr.q1){
+        const fb=document.createElement('div');fb.className='stat-fb stat-fb-ok';
+        fb.textContent='✓ Goed. Ontbrekende data zijn zelf informatief: wat zegt het dat we dit niet structureel meten? Overweeg dit mee te nemen in je advies.';
+        nodata.appendChild(fb);
+      }
+      card.appendChild(nodata);
+    }
+
+    // Verborgen tekst (inzicht) — altijd onderaan na alle vragen
+    const insight=document.createElement('div');insight.className='stat-insight';
+    insight.innerHTML='<strong>Wat de data zeggen:</strong> '+v.tekst;
+    card.appendChild(insight);
+
+    el.appendChild(card);
   });
 }
 // Ontdekkingsmoment: welk type verzuim verklaart de stijging? Dit is een feitelijk, uit de
